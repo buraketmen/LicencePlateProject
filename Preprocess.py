@@ -1,18 +1,14 @@
-# Preprocess.py
-
 import cv2
 import numpy as np
 import math
 
-# module level variables ##########################################################################
+# sabit değişkenler ##########################################################################
 GAUSSIAN_SMOOTH_FILTER_SIZE = (5, 5)
 ADAPTIVE_THRESH_BLOCK_SIZE = 11 #en iyisi
 ADAPTIVE_THRESH_WEIGHT = 2 #en iyisi
-"""ADAPTIVE_THRESH_BLOCK_SIZE = 19
-ADAPTIVE_THRESH_WEIGHT = 9"""
 
 ###################################################################################################
-def preprocess(imgOriginal):
+def preprocess(imgOriginal,type):
     imgGrayscale = extractValue(imgOriginal)
     imgMaxContrastGrayscale = maximizeContrast(imgGrayscale)
     height, width = imgGrayscale.shape
@@ -20,7 +16,8 @@ def preprocess(imgOriginal):
     imgBlurred = cv2.GaussianBlur(imgMaxContrastGrayscale, GAUSSIAN_SMOOTH_FILTER_SIZE, 0)
     imgThresh = cv2.adaptiveThreshold(imgBlurred, 255.0, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, ADAPTIVE_THRESH_BLOCK_SIZE, ADAPTIVE_THRESH_WEIGHT)
     ret, imgThresh = cv2.threshold(imgThresh, 0, 255, cv2.THRESH_OTSU) #çıkarılabilir, deneme aşamasında
-    cv2.imwrite("./StepPhotos/imgThresh1.png",imgThresh)
+    if(type==2):
+        imgThresh = cv2.bitwise_not(imgThresh)
     return imgGrayscale, imgThresh
 
 ###################################################################################################
@@ -42,7 +39,6 @@ def maximizeContrast(imgGrayscale):
     imgGrayscalePlusTopHat = cv2.add(imgGrayscale, imgTopHat)
     imgGrayscalePlusTopHatMinusBlackHat = cv2.subtract(imgGrayscalePlusTopHat, imgBlackHat)
     return imgGrayscalePlusTopHatMinusBlackHat
-# end function
 
 
 

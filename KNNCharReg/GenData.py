@@ -1,11 +1,9 @@
-# GenData.py
 
 import sys
 import numpy as np
 import cv2
 import os
 
-# module level variables ##########################################################################
 MIN_CONTOUR_AREA = 100
 
 RESIZED_IMAGE_WIDTH = 20
@@ -13,7 +11,7 @@ RESIZED_IMAGE_HEIGHT = 30
 
 ###################################################################################################
 def main():
-    imgTrainingNumbers = cv2.imread("arial.png")            # read in training numbers image
+    imgTrainingNumbers = cv2.imread("fonttire.png")            # read in training numbers image
 
     if imgTrainingNumbers is None:                          # if image was not read successfully
         print("error: image not read from file \n\n")        # print error message to std out

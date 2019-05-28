@@ -2,6 +2,8 @@ import os
 import cv2
 import datetime
 import locale
+import base64
+#import urllib2
 import numpy as np
 import DetectChars
 import DetectPlates
@@ -35,7 +37,12 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         super(MainWithGui,self).__init__(parent)
         self.setupUi(self)
         self.capture = None
-        self.checkPlate = None
+        self.croppedimage = None
+        self.croppedimage2 = None
+        self.checkPlateTop = None
+        self.checkTop = 0
+        self.checkPlateBottom = None
+        self.checkBottom = 0
         try:
             self.backimage= cv2.imread('background.jpg')
         except:
@@ -68,11 +75,14 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         else:
             self.detectButton.setText('Plaka Tanimayi Baslat')
             self.plateEnabled = False
-            self.iterim=1
 
     def startWebcam(self):
         try:
+
+            #'rtsp://root:root@192.168.10.34/axis-media/media.amp'
             self.capture = cv2.VideoCapture(0)
+            #self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
+
         except:
             self.startButton.setEnabled(False)
             QMessageBox.warning(self, 'Kamera Hatasi!',
@@ -85,8 +95,6 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.trainButton.setEnabled(False)
             if(self.plateTrain==True):
                 self.detectButton.setEnabled(True)
-            self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-            self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.updateFrame)
             self.timer.start(1)
@@ -94,12 +102,13 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
 
     def stopWebcam(self):
         self.cameraStatus=False
+        self.capture.release()
         if(self.plateEnabled != False):
             self.plateEnabled= False
             self.detectButton.toggle()
             self.detectButton.setText('Plaka Tanimayi Baslat')
         self.timer.stop()
-        self.displayImage(self.backimage)
+        self.displayImage(self.backimage,1)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
         self.detectButton.setEnabled(False)
@@ -121,7 +130,6 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
 
     def updateFrame(self):
         ret, self.image = self.capture.read()
-        #self.image = cv2.flip(self.image, 1)
         if (self.plateEnabled):
             detectedImage = self.detectPlate(self.image)
             self.displayImage(detectedImage)
@@ -129,27 +137,47 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.displayImage(self.image)
 
     def detectPlate(self, img):
-        img = cv2.resize(img, (0, 0), fx=3, fy=3)
-        listOfPossiblePlates = DetectPlates.detectPlatesInScene(img)  # Plakaları tespit et
-        listOfPossiblePlates = DetectChars.detectCharsInPlates(listOfPossiblePlates)  # Plaka içindeki karakterleri tespit et
-        if len(listOfPossiblePlates) == 0:  # Eğer plaka bulunmadıysa
-            pass
-        else:
+        imgtop = self.image[0:240, 0:640]
+        imgbottom = self.image[240:480, 0:640]
+        #imgtop = cv2.resize(imgtop, (0, 0), fx = 2.0, fy = 2.0)
+        #imgbottom = cv2.resize(imgbottom,(0, 0), fx = 2.0, fy = 2.0)
+
+
+        listOfPossiblePlatesTop = DetectPlates.detectPlatesInScene(imgtop,2)  # Plakaları tespit et
+        listOfPossiblePlatesTop = DetectChars.detectCharsInPlates(listOfPossiblePlatesTop,2)  # Plaka içindeki karakterleri tespit et
+
+        listOfPossiblePlatesBottom = DetectPlates.detectPlatesInScene(imgbottom, 1)  # Plakaları tespit et
+        listOfPossiblePlatesBottom = DetectChars.detectCharsInPlates(listOfPossiblePlatesBottom,1)  # Plaka içindeki karakterleri tespit et
+        if (len(listOfPossiblePlatesTop) != 0):
             # Eğer program buraya geldiyse en azından bir plaka okunmuştur
             # Olası plakaların listesini DESCENDING sıralamasına göre sırala (Çok karakterden az karaktere)
-            listOfPossiblePlates.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
-            # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
-            licPlate = listOfPossiblePlates[0]
-            if(10> len(licPlate.strChars)> 6):
-                p2fRectPoints = cv2.boxPoints(licPlate.rrLocationOfPlateInScene)  # döndürülmüş 4 köşeyi al
-                cv2.line(img, tuple(p2fRectPoints[0]), tuple(p2fRectPoints[1]), SCALAR_RED, 3)  # 4 çizgi çiz
-                cv2.line(img, tuple(p2fRectPoints[1]), tuple(p2fRectPoints[2]), SCALAR_RED, 3)
-                cv2.line(img, tuple(p2fRectPoints[2]), tuple(p2fRectPoints[3]), SCALAR_RED, 3)
-                cv2.line(img, tuple(p2fRectPoints[3]), tuple(p2fRectPoints[0]), SCALAR_RED, 3)
-
-                if(self.checkPlate == licPlate.strChars):
-                    self.Add2Database(licPlate.strChars,licPlate.imgPlate,licPlate.imgThresh,img)
-                self.checkPlate = licPlate.strChars
+            listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
+            licPlateTop = listOfPossiblePlatesTop[0]
+            if(len(licPlateTop.strChars)>4):
+                print(licPlateTop.strChars)
+            if (len(licPlateTop.strChars) == 8):
+                if (self.checkPlateTop == licPlateTop.strChars):
+                    self.checkTop += 1
+                else:
+                    self.checkTop = 0
+                if (self.checkTop == 6):
+                    self.Add2Database(licPlateTop.strChars, licPlateTop.imgPlate, licPlateTop.imgThresh, img)
+                self.checkPlateTop = licPlateTop.strChars
+            if (len(listOfPossiblePlatesBottom) != 0):
+                listOfPossiblePlatesBottom.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
+                # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
+                licPlateBottom = listOfPossiblePlatesBottom[0]
+                if (len(licPlateBottom.strChars) > 10):
+                    print(licPlateBottom.strChars)
+                if (len(licPlateBottom.strChars) == 12):
+                    if (self.checkPlateBottom == licPlateBottom.strChars):
+                        self.checkBottom += 1
+                    else:
+                        self.checkBottom = 0
+                    if (self.checkBottom == 6):
+                        self.Add2Database(licPlateBottom.strChars, licPlateBottom.imgPlate,
+                                          licPlateBottom.imgThresh, img)
+                    self.checkPlateBottom = licPlateBottom.strChars
         return img
 
     def Add2Database(self,plate,imgPlate,imgThresh,img):
@@ -168,14 +196,12 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             try:
                 #cv2.imwrite("./PlatePhotos/Original_{}_{}_{}.png".format(plate,date,time),imgPlate)  # Kırpılan plakayı ve işlenmiş halini kaydet
                 cv2.imwrite("./PlatePhotos/Thresh_{}_{}_{}.png".format(plate,date,time), imgThresh)
-                #cv2.imwrite("./PlatePhotos/Scene_{}_{}_{}.png".format(plate,date,time), img)  # Gösterilen görüntüyü kaydet
             except:
                 pass
             curs.execute("INSERT INTO Plates (Plate,Date,Time) VALUES(?,?,?)",
                          (plate, date, time))
             conn.commit()
             self.Load_Database()
-
 
     def Load_Database(self):
         while self.tableWidget.rowCount() > 0:
@@ -200,11 +226,13 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.imgLabel.setPixmap(QPixmap.fromImage(outImage))
         self.imgLabel.setScaledContents(True)
 
+
 def main():
     app = QApplication([])
     win = MainWithGui()
     win.setWindowTitle('Vagon Plaka Takip')
     app.exec_()
+
 main()
 
 """

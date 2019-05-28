@@ -1,4 +1,3 @@
-#DetectChars.py
 import os
 import cv2
 import numpy as np
@@ -15,21 +14,27 @@ SCALAR_GREEN = (0.0, 255.0, 0.0)
 SCALAR_RED = (0.0, 0.0, 255.0)
 
 #checkIfPossibleChar için sabitler, bu yalnızca olası bir karakteri kontrol eder (başka bir karakterle karşılaştırılmaz)
-MIN_PIXEL_WIDTH = 2
-MIN_PIXEL_HEIGHT = 8
+"""MIN_PIXEL_WIDTH = 8
+MIN_PIXEL_HEIGHT = 32
 MIN_PIXEL_AREA = 80
+MIN_ASPECT_RATIO = 0.25
+MAX_ASPECT_RATIO = 1.0"""
+MIN_PIXEL_WIDTH = 2
+MIN_PIXEL_HEIGHT = 4
+MIN_PIXEL_AREA = 40
 MIN_ASPECT_RATIO = 0.25
 MAX_ASPECT_RATIO = 1.0
 
 # İki karakterin karşılaştırılması için sabitler
 MIN_DIAG_SIZE_MULTIPLE_AWAY = 0.3
-MAX_DIAG_SIZE_MULTIPLE_AWAY = 5.0
+MAX_DIAG_SIZE_MULTIPLE_AWAY = 8.0
+#MAX_DIAG_SIZE_MULTIPLE_AWAY = 5.0 en iyisi
 
-MAX_CHANGE_IN_AREA = 0.5
+MAX_CHANGE_IN_AREA = 0.9
 MAX_CHANGE_IN_WIDTH = 0.8
 MAX_CHANGE_IN_HEIGHT = 0.2
-#MAX_ANGLE_BETWEEN_CHARS = 12.0
 MAX_ANGLE_BETWEEN_CHARS = 10.0
+#MAX_ANGLE_BETWEEN_CHARS = 10.0 #en iyisi, 12 yapılabilir
 
 
 # Diğer sabitlemeler
@@ -48,7 +53,6 @@ def loadKNNDataAndTrainKNN():
         npaFlattenedImages = np.loadtxt("flattened_images.txt", np.float32)  # Eğitim resimlerini okuma
     except:                                                                    # Eğer dosya açılamadıysa
         pass
-
     npaClassifications = npaClassifications.reshape((npaClassifications.size, 1))       # Numpy dizisini 1 boyutlu hale getirme
     kNearest.setDefaultK(1)                                                             # K'yı varsayılan olarak 1 yapma
     kNearest.train(npaFlattenedImages, cv2.ml.ROW_SAMPLE, npaClassifications)           # KNN nesnelerini eğitme
@@ -56,7 +60,7 @@ def loadKNNDataAndTrainKNN():
     return True  #Eğer buraya gelirsek eğitim başarılı olmuştur
 
 ###################################################################################################
-def detectCharsInPlates(listOfPossiblePlates):
+def detectCharsInPlates(listOfPossiblePlates,type):
     intPlateCounter = 0
     imgContours = None
     contours = []
@@ -66,10 +70,9 @@ def detectCharsInPlates(listOfPossiblePlates):
 
     # Eğer bu noktaya geldiyse plakalar listesinde en az bir plaka olduğundan emin olabiliriz
     for possiblePlate in listOfPossiblePlates:          # Her olası plaka için for döngüsü
-        possiblePlate.imgGrayscale, possiblePlate.imgThresh = Preprocess.preprocess(possiblePlate.imgPlate)     # Gri tonlamalı ve threshold görüntüler elde etmek için önişlem
+        possiblePlate.imgGrayscale, possiblePlate.imgThresh = Preprocess.preprocess(possiblePlate.imgPlate, type)     # Gri tonlamalı ve threshold görüntüler elde etmek için önişlem
         # Daha kolay görüntüleme ve karakter algılama için plaka görüntüsünün boyutunu arttırır
-        possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx = 1.6, fy = 1.6)
-        #possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx=2.0, fy=2.0)
+        #possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx = 1.0, fy = 1.0)
         #Gri alanları gidermek için tekrar threshold
         thresholdValue, possiblePlate.imgThresh = cv2.threshold(possiblePlate.imgThresh, 0.0, 255.0, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
@@ -106,7 +109,7 @@ def detectCharsInPlates(listOfPossiblePlates):
 
 ###################################################################################################
 def findPossibleCharsInPlate(imgGrayscale, imgThresh):
-    listOfPossibleChars = []                        # this will be the return value
+    listOfPossibleChars = []                    
     contours = []
     imgThreshCopy = imgThresh.copy()
 

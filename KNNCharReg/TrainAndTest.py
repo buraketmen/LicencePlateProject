@@ -61,7 +61,7 @@ def main():
 
     kNearest.train(npaFlattenedImages, cv2.ml.ROW_SAMPLE, npaClassifications)
 
-    imgTestingNumbers = cv2.imread("deneme.png")          # read in testing numbers image
+    imgTestingNumbers = cv2.imread("testsayi.png")          # read in testing numbers image
 
     if imgTestingNumbers is None:                           # if image was not read successfully
         print ("error: image not read from file \n\n")        # print error message to std out

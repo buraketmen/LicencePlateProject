@@ -1,4 +1,3 @@
-# DetectPlates.py
 import cv2
 import numpy as np
 import math
@@ -8,23 +7,23 @@ import DetectChars
 import PossiblePlate
 import PossibleChar
 
-# Modül değişkenleri ##########################################################################
-PLATE_WIDTH_PADDING_FACTOR = 1.3
-PLATE_HEIGHT_PADDING_FACTOR = 1.5
+# Sabit değişkenler ##########################################################################
+PLATE_WIDTH_PADDING_FACTOR = 1.0
+PLATE_HEIGHT_PADDING_FACTOR = 1.4
 SCALAR_BLACK = (0.0, 0.0, 0.0)
 SCALAR_WHITE = (255.0, 255.0, 255.0)
 SCALAR_YELLOW = (0.0, 255.0, 255.0)
 SCALAR_GREEN = (0.0, 255.0, 0.0)
 SCALAR_RED = (0.0, 0.0, 255.0)
 ###################################################################################################
-def detectPlatesInScene(imgOriginalScene):
+def detectPlatesInScene(imgOriginalScene,type):
     listOfPossiblePlates = []     # Dönüş değeri olacak
     height, width, numChannels = imgOriginalScene.shape
     imgGrayscaleScene = np.zeros((height, width, 1), np.uint8) #matris olusturma
     imgThreshScene = np.zeros((height, width, 1), np.uint8)
     imgContours = np.zeros((height, width, 3), np.uint8)
     cv2.destroyAllWindows()
-    imgGrayscaleScene, imgThreshScene = Preprocess.preprocess(imgOriginalScene)  # Gri tonlamalı ve eşikli görüntüler elde etmek için ön işlem
+    imgGrayscaleScene, imgThreshScene = Preprocess.preprocess(imgOriginalScene,type)  # Gri tonlamalı ve eşikli görüntüler elde etmek için ön işlem
     # Sahnedeki tüm olası karakterleri bul
     # Bu işlev ilk önce tüm konturları bulur, ardından sadece karakter olabilecek kontürleri içerir (henüz diğer karakterlerle karşılaştırılmadan)
     listOfPossibleCharsInScene = findPossibleCharsInScene(imgThreshScene)
@@ -49,11 +48,9 @@ def findPossibleCharsInScene(imgThresh):
     imgContours = np.zeros((height, width, 3), np.uint8)
     for i in range(0, len(contours)):    # Her bir kontür için
         possibleChar = PossibleChar.PossibleChar(contours[i])
-
         if DetectChars.checkIfPossibleChar(possibleChar):         # Kontur olası bir karakter ise, bunun diğer karakterlerle (henüz) karşılaştırılmadığını unutma
             intCountOfPossibleChars = intCountOfPossibleChars + 1 # Olası karakterlerin sayısını arttır
             listOfPossibleChars.append(possibleChar)              # Olası listeye ekle
-
     return listOfPossibleChars
 
 ###################################################################################################
@@ -62,13 +59,11 @@ def extractPlate(imgOriginal, listOfMatchingChars):
 
     listOfMatchingChars.sort(key = lambda matchingChar: matchingChar.intCenterX)  # Karakterleri x konumuna göre sola veya sağa sıralayın
 
-
     # Plakanın merkez noktasını hesaplar
     fltPlateCenterX = (listOfMatchingChars[0].intCenterX + listOfMatchingChars[len(listOfMatchingChars) - 1].intCenterX) / 2.0
     fltPlateCenterY = (listOfMatchingChars[0].intCenterY + listOfMatchingChars[len(listOfMatchingChars) - 1].intCenterY) / 2.0
 
     ptPlateCenter = fltPlateCenterX, fltPlateCenterY
-
     # Plaka genişliği ve yüksekliğini hesaplar
     intPlateWidth = int((listOfMatchingChars[len(listOfMatchingChars) - 1].intBoundingRectX + listOfMatchingChars[len(listOfMatchingChars) - 1].intBoundingRectWidth - listOfMatchingChars[0].intBoundingRectX) * PLATE_WIDTH_PADDING_FACTOR)
     intTotalOfCharHeights = 0
