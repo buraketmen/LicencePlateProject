@@ -8,8 +8,8 @@ import PossiblePlate
 import PossibleChar
 
 # Sabit değişkenler ##########################################################################
-PLATE_WIDTH_PADDING_FACTOR = 1.0
-PLATE_HEIGHT_PADDING_FACTOR = 1.4
+PLATE_WIDTH_PADDING_FACTOR = 1.1
+PLATE_HEIGHT_PADDING_FACTOR = 1.3
 SCALAR_BLACK = (0.0, 0.0, 0.0)
 SCALAR_WHITE = (255.0, 255.0, 255.0)
 SCALAR_YELLOW = (0.0, 255.0, 255.0)
