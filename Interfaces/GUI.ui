@@ -21,21 +21,24 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>9999</width>
-    <height>9999</height>
+    <width>1920</width>
+    <height>1080</height>
    </size>
   </property>
   <property name="focusPolicy">
-   <enum>Qt::NoFocus</enum>
+   <enum>Qt::StrongFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>Plaka Takip</string>
+   <string>Vagon Plaka Takip</string>
   </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonIconOnly</enum>
   </property>
   <property name="documentMode">
    <bool>false</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">

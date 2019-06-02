@@ -59,7 +59,6 @@ def infoFromDatabase():
             maxChangeInHeight = data[16]
             maxAngleBetweenChar = data[17]
             minNumberOfMatchCharNumber = data[18]
-    
 
 def loadKNNDataAndTrainKNN():
     #os.makedirs("./Font/deneme/")
@@ -76,7 +75,6 @@ def loadKNNDataAndTrainKNN():
 
     return True  #Eğer buraya gelirsek eğitim başarılı olmuştur
 
-###################################################################################################
 def detectCharsInPlates(listOfPossiblePlates,type):
     intPlateCounter = 0
     imgContours = None
@@ -124,7 +122,6 @@ def detectCharsInPlates(listOfPossiblePlates,type):
 
     return listOfPossiblePlates
 
-###################################################################################################
 def findPossibleCharsInPlate(imgGrayscale, imgThresh):
     listOfPossibleChars = []                    
     contours = []
@@ -141,7 +138,6 @@ def findPossibleCharsInPlate(imgGrayscale, imgThresh):
 
     return listOfPossibleChars
 
-###################################################################################################
 def checkIfPossibleChar(possibleChar):
     # Bir karakter olup olmadığını görmek için kontur üzerinde kaba bir kontrol yapan (ilk geçiş) işlevidir
     # (Bir grubu aramak için henüz karakteri diğer karakterlerle karşılaştırmadık)
@@ -152,7 +148,6 @@ def checkIfPossibleChar(possibleChar):
     else:
         return False
 
-###################################################################################################
 def findListOfListsOfMatchingChars(listOfPossibleChars):
     # Bu fonksiyonla mümkün olan tüm karakterlerle büyük bir listede başlıyoruz
     # Bu işlevin amacı, büyük bir karakter listesinin, eşleşen karakter listelerinin listesine yeniden düzenlenmesidir.
@@ -180,7 +175,6 @@ def findListOfListsOfMatchingChars(listOfPossibleChars):
         break
     return listOfListsOfMatchingChars
 
-###################################################################################################
 def findListOfMatchingChars(possibleChar, listOfChars):
     # Bu fonksiyonun amacı, olası bir karakter ve olası bir karakter listesinin büyük bir listesidir,
     # Tüm olası karakterleri tek bir olası karakterin eşleşeceği büyük listede bul ve eşleşen karakterleri bir liste olarak döndür
@@ -208,16 +202,12 @@ def findListOfMatchingChars(possibleChar, listOfChars):
             listOfMatchingChars.append(possibleMatchingChar)  # Eğer karakterler eşleşirse, mevcut karakterleri eşleşen karakterlerin listesine ekle
     return listOfMatchingChars   #sonucu döndür
 
-###################################################################################################
-# İki karakter arasındaki mesafeyi hesaplamak için Pisagor teoremini kullan
 def distanceBetweenChars(firstChar, secondChar):
     intX = abs(firstChar.intCenterX - secondChar.intCenterX)
     intY = abs(firstChar.intCenterY - secondChar.intCenterY)
 
     return math.sqrt((intX ** 2) + (intY ** 2))
 
-###################################################################################################
-# Karakterler arasındaki açıyı hesaplamak için temel trigonometri (SOH CAH TOA) kullan
 def angleBetweenChars(firstChar, secondChar):
     fltAdj = float(abs(firstChar.intCenterX - secondChar.intCenterX))
     fltOpp = float(abs(firstChar.intCenterY - secondChar.intCenterY))
@@ -228,10 +218,6 @@ def angleBetweenChars(firstChar, secondChar):
     fltAngleInDeg = fltAngleInRad * (180.0 / math.pi)   # derece cinsinden açı hesaplamak
     return fltAngleInDeg
 
-###################################################################################################
-# Üst üste binen iki karakterimiz varsa veya birbirinden ayrı karakter olması için birbirine yakınsak, içteki (küçük) karakter dizisini çıkartın,
-# Bu, aynı karakter için iki kontür bulunursa, aynı karakterin iki kez eklenmesini önlemek içindir,
-# Örneğin 'O' harfi için hem iç halka hem de dış halka kontür olarak bulunabilir, ancak sadece bir kez karakterin dahil edilmesi gerekir
 def removeInnerOverlappingChars(listOfMatchingChars):
     listOfMatchingCharsWithInnerCharRemoved = list(listOfMatchingChars)  # bu dönüş değeri olacak
     for currentChar in listOfMatchingChars:
@@ -250,8 +236,6 @@ def removeInnerOverlappingChars(listOfMatchingChars):
 
     return listOfMatchingCharsWithInnerCharRemoved
 
-###################################################################################################
-# Gerçek karakter tanımayı uygulayacağımız yer
 def recognizeCharsInPlate(imgThresh, listOfMatchingChars):
     strChars = ""    # Bu dönüş değeri olacaktır, plakadaki karakter sayısı
     height, width = imgThresh.shape

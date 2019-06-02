@@ -2,12 +2,10 @@ import cv2
 import numpy as np
 import math
 
-# sabit değişkenler ##########################################################################
 GAUSSIAN_SMOOTH_FILTER_SIZE = (5, 5)
-ADAPTIVE_THRESH_BLOCK_SIZE = 11 #en iyisi
-ADAPTIVE_THRESH_WEIGHT = 2 #en iyisi
+ADAPTIVE_THRESH_BLOCK_SIZE = 11
+ADAPTIVE_THRESH_WEIGHT = 2
 
-###################################################################################################
 def preprocess(imgOriginal,type):
     imgGrayscale = extractValue(imgOriginal)
     imgMaxContrastGrayscale = maximizeContrast(imgGrayscale)
@@ -20,7 +18,6 @@ def preprocess(imgOriginal,type):
         imgThresh = cv2.bitwise_not(imgThresh)
     return imgGrayscale, imgThresh
 
-###################################################################################################
 def extractValue(imgOriginal):
     height, width, numChannels = imgOriginal.shape
     imgHSV = np.zeros((height, width, 3), np.uint8)
@@ -28,7 +25,6 @@ def extractValue(imgOriginal):
     imgHue, imgSaturation, imgValue = cv2.split(imgHSV)
     return imgValue
 
-###################################################################################################
 def maximizeContrast(imgGrayscale):
     height, width = imgGrayscale.shape
     imgTopHat = np.zeros((height, width, 1), np.uint8)

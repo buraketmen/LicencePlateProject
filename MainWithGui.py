@@ -9,7 +9,6 @@ import numpy as np
 import DetectChars
 import DetectPlates
 import PossiblePlate
-import FontGenerator
 import Database
 import datetime
 import shutil
@@ -31,7 +30,6 @@ curs = conn.cursor()
 path = os.getcwd() + "/"
 path = str(path)
 
-#curs.execute("DELETE FROM Plates")
 def Screenshot(ip):
     capture = VideoStream(src=str(ip))
     try:
@@ -40,12 +38,12 @@ def Screenshot(ip):
     except:
         pass
 
+##############################################################################################
 class MainWithGui(QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(MainWithGui,self).__init__(parent)
         self.setupUi(self)
         self.capture = None
-        self.capture2 = None
         self.image = None
         self.char = None
         self.fontPhoto = None
@@ -64,16 +62,16 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
     def InitUi(self):
         self.show()
         Database.setDatabase()
-        self.startButton.clicked.connect(self.startWebcam)
+        self.startButton.clicked.connect(self.StartWebcam)
         self.startButton.setEnabled(True)
-        self.stopButton.clicked.connect(self.stopWebcam)
+        self.stopButton.clicked.connect(self.StopWebcam)
         self.stopButton.setEnabled(False)
         self.cameraStatus = False
-        self.detectButton.toggled.connect(self.detectWebcam)
+        self.detectButton.toggled.connect(self.DetectWebcam)
         self.detectButton.setCheckable(True)
         self.detectButton.setEnabled(False)
         self.plateEnabled = False
-        self.trainButton.clicked.connect(self.trainPlates)
+        self.trainButton.clicked.connect(self.TrainPlates)
         self.plateTrain =False
         
         self.actionCameras.triggered.connect(self.ShowCamerasPage)
@@ -130,8 +128,6 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         if(len(self.charPage.editChar.text())>0):
             self.charPage.buttonAccept.setEnabled(True)
 
-
-
     def AddFontPhoto(self):
         try:
             self.fname, filter = QFileDialog().getOpenFileName(self, 'Font Fotoğrafını Seç', '', ("Image Files (*.jpg)"))
@@ -143,169 +139,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                                 "Fotoğraf uzantısını değistirerek tekrar deneyiniz!",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
-    def StartRecording(self):
-        MIN_CONTOUR_AREA = 100
-        RESIZED_IMAGE_WIDTH = 20
-        RESIZED_IMAGE_HEIGHT = 30
-        Check = True
-        if(len(str(self.addFontPage.editFontName.text()))!=0):
-            fontName = str(self.addFontPage.editFontName.text())
-            stream = open(self.fname, "rb")
-            bytes = bytearray(stream.read())
-            numpyarray = np.asarray(bytes, dtype=np.uint8)
-            imgTrainingNumbers = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
-            imgGray = cv2.cvtColor(imgTrainingNumbers, cv2.COLOR_BGR2GRAY)  # get grayscale image
-            imgBlurred = cv2.GaussianBlur(imgGray, (5, 5), 0)  # blur
-
-            # filter image from grayscale to black and white
-            imgThresh = cv2.adaptiveThreshold(imgBlurred,  # input image
-                                              255,  # make pixels that pass the threshold full white
-                                              cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                              # use gaussian rather than mean, seems to give better results
-                                              cv2.THRESH_BINARY_INV, 11, 2)  # constant subtracted from the mean or weighted mean
-
-            imgThreshCopy = imgThresh.copy()  # make a copy of the thresh image, this in necessary b/c findContours modifies the image
-
-            npaContours, npaHierarchy = cv2.findContours(imgThreshCopy,
-                                                         # input image, make sure to use a copy since the function will modify this image in the course of finding contours
-                                                         cv2.RETR_EXTERNAL,  # retrieve the outermost contours only
-                                                         cv2.CHAIN_APPROX_SIMPLE)  # compress horizontal, vertical, and diagonal segments and leave only their end points
-
-            npaFlattenedImages = np.empty((0, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
-            charCount = 0
-            intClassifications = []  # declare empty classifications list, this will be our list of how we are classifying our chars from user input, we will write to file at the end
-
-            # possible chars we are interested in are digits 0 through 9, put these in list intValidChars
-            intValidChars = [ord('0'), ord('1'), ord('2'), ord('3'), ord('4'), ord('5'), ord('6'), ord('7'), ord('8'),
-                             ord('9'),ord('A'), ord('B'), ord('C'), ord('D'), ord('E'), ord('F'), ord('G'), ord('H'),
-                             ord('I'), ord('J'), ord('K'), ord('L'), ord('M'), ord('N'), ord('O'), ord('P'), ord('Q'),
-                             ord('R'), ord('S'), ord('T'), ord('U'), ord('V'), ord('W'), ord('X'), ord('Y'), ord('Z')]
-            for npaContour in npaContours:  # for each contour
-
-                if cv2.contourArea(npaContour) > MIN_CONTOUR_AREA:  # if contour is big enough to consider
-                    [intX, intY, intW, intH] = cv2.boundingRect(npaContour)  # get and break out bounding rect
-
-                    # draw rectangle around each contour as we ask user for input
-                    cv2.rectangle(imgTrainingNumbers,  (intX, intY), (intX + intW, intY + intH),  (0, 0, 255), 3)
-                    imgROI = imgThresh[intY:intY + intH, intX:intX + intW]  # crop char out of threshold image
-                    imgROIResized = cv2.resize(imgROI, (RESIZED_IMAGE_WIDTH,
-                                                        RESIZED_IMAGE_HEIGHT))  # resize image, this will be more consistent for recognition and storage
-
-                    self.displayPhoto(imgROIResized,"Char")
-                    self.displayPhoto(imgThresh, "Thresh")
-                    self.displayPhoto(imgTrainingNumbers,"Font")
-                    self.ShowCharPage()
-                    intChar = self.char
-                    if intChar == None:  # if esc key was pressed
-                        Check = False
-                        QMessageBox.warning(self, 'Çıkış',
-                                            "İşlem iptal edildi!",
-                                            QMessageBox.Ok, QMessageBox.Ok)
-                        self.addFontPage.close()
-                    if intChar in intValidChars:  # else if the char is in the list of chars we are looking for . . .
-                        intClassifications.append(intChar)
-                        npaFlattenedImage = imgROIResized.reshape((1, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
-                        npaFlattenedImages = np.append(npaFlattenedImages, npaFlattenedImage, 0)
-                        charCount = charCount + 1
-                        self.char = None
-                if (Check == False):
-                    break
-            fltClassifications = np.array(intClassifications, np.float32)
-            npaClassifications = fltClassifications.reshape((fltClassifications.size, 1))
-            if (Check == True):
-                if (len(fontName) > 0):
-                    search = curs.execute('SELECT FontName FROM Fonts WHERE FontName = ? ', (fontName,))
-                    results = search.fetchone()
-                    if (results == None):
-                        path = "./Fonts" + "/" + str(fontName) + "/"
-                        an = datetime.datetime.now()
-                        fontDate = str(an.day) + "/" + str(an.month) + "/" + str(an.year)
-                        curs.execute("""INSERT INTO Fonts(FontName, FontDate, FontFileDir, CharCountInFont) 
-                                VALUES(?,?,?,?)""", (fontName, str(fontDate), path, str(charCount)))
-                        conn.commit()
-                        os.makedirs(path)
-                        np.savetxt(path + "classifications.txt", npaClassifications)  # write flattened images to file
-                        np.savetxt(path + "flattened_images.txt", npaFlattenedImages)  #
-                        self.char == None
-                        self.addFontPage.close()
-                        QMessageBox.information(self, 'Kayıt Başarılı',
-                                    "Font için sınıflandırma ve fotoğraf dizeleri başarıyla oluşturuldu.",
-                                    QMessageBox.Ok, QMessageBox.Ok)
-        else:
-            QMessageBox.warning(self, 'Font İsim Hatası',
-                                "Lütfen font için isim giriniz!",
-                                QMessageBox.Ok, QMessageBox.Ok)
-
-    def GetCharInfo(self):
-        char =self.charPage.editChar.text()
-        if(char!=""):
-            self.char = ord(char)
-            self.char = int(self.char)
-            self.charPage.close()
-        else:
-            self.charPage.close()
-            self.addFontPage.close()
-            QMessageBox.warning(self, 'Harf Hatasi',
-                                "Lütfen tekrar deneyiniz!",
-                                QMessageBox.Ok, QMessageBox.Ok)
-
-    def LoadPhoto(self,fname):
-        stream = open(fname, "rb")
-        bytes = bytearray(stream.read())
-        numpyarray = np.asarray(bytes, dtype=np.uint8)
-        self.fontPhoto = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
-        self.displayPhoto(self.fontPhoto,"Font")
-
-    def AddCamera(self):
-        cameraName = self.addCameraPage.editCameraName.text()
-        cameraIP = self.addCameraPage.editCameraIP.text()
-        cameraIPAddition = self.addCameraPage.editCameraIPAddition.text()
-        username = self.addCameraPage.editUsername.text()
-        password = self.addCameraPage.editPassword.text()
-        protocolType = "rtsp"
-        minPixelWidth = Database.MIN_PIXEL_WIDTH
-        minPixelHeight = Database.MIN_PIXEL_HEIGHT
-        minPixelArea = Database.MIN_PIXEL_AREA
-        minPixelRatio = Database.MIN_ASPECT_RATIO
-        maxPixelRatio = Database.MAX_ASPECT_RATIO
-        minDiagSize = Database.MIN_DIAG_SIZE_MULTIPLE_AWAY
-        maxDiagSize = Database.MAX_DIAG_SIZE_MULTIPLE_AWAY
-        maxChangeInArea = Database.MAX_CHANGE_IN_AREA
-        maxChangeInWidth = Database.MAX_CHANGE_IN_WIDTH
-        maxChangeInHeight = Database.MAX_CHANGE_IN_HEIGHT
-        maxAngleBetweenChar = Database.MAX_ANGLE_BETWEEN_CHARS
-        minNumberOfMatchCharNumber = Database.MIN_NUMBER_OF_MATCHING_CHARS
-        topYOne = 0
-        topYTwo = 240
-        bottomYOne = 240
-        bottomYTwo = 480
-        search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
-        results = search.fetchone()
-        if(len(cameraIP)<16 and len(cameraIP)>0 and cameraName!=""):
-            if(results == None):
-                if(self.addCameraPage.radioButtonRtsp.isChecked()==True):
-                    protocolType = "rtsp"
-                if(self.addCameraPage.radioButtonHttp.isChecked()==True):
-                    protocolType = "http"
-                    
-                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,TopYOne,TopYTwo,BottomYOne,BottomYTwo) 
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",(cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight, minPixelArea,minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth, maxChangeInHeight , maxAngleBetweenChar, minNumberOfMatchCharNumber,topYOne,topYTwo,bottomYOne, bottomYTwo))
-                conn.commit()
-                protocolType = "rtsp"
-                self.addCameraPage.close()
-                QMessageBox.information(self, 'Kayit Basarili!',
-                                        "Kamera sisteme eklendi!\n",
-                                        QMessageBox.Ok, QMessageBox.Ok)
-            else:
-                QMessageBox.warning(self, 'Gecersiz Kamera İsmi!',
-                                    "Eklenmek istenen kamera adı sistemde mevcut!\n",
-                                    QMessageBox.Ok, QMessageBox.Ok)
-        else:
-            QMessageBox.warning(self, 'Gecersiz Bilgi!',
-                                "Eklenmek istenen bilgileri kontrol ediniz!\n",
-                                QMessageBox.Ok, QMessageBox.Ok)
-
-    def detectWebcam(self, status):
+    def DetectWebcam(self, status):
         if status:
             self.detectButton.setText('Plaka Tanımayı Durdur')
             self.plateEnabled = True
@@ -313,7 +147,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.detectButton.setText('Plaka Tanimayi Baslat')
             self.plateEnabled = False
 
-    def startWebcam(self):
+    def StartWebcam(self):
         try:
             # self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
             #'rtsp://root:root@192.168.10.34/axis-media/media.amp'
@@ -337,27 +171,25 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             if(self.plateTrain==True):
                 self.detectButton.setEnabled(True)
             self.timer = QTimer(self)
-            self.timer.timeout.connect(self.updateFrame)
+            self.timer.timeout.connect(self.UpdateFrame)
             self.timer.start(1)
 
             self.statusbar.showMessage('Kamera baslatildi.')
 
-
-    def stopWebcam(self):
+    def StopWebcam(self):
         self.cameraStatus=False
         if(self.plateEnabled != False):
             self.plateEnabled= False
             self.detectButton.toggle()
             self.detectButton.setText('Plaka Tanimayi Baslat')
         self.timer.stop()
-        self.displayImage(self.backimage)
+        self.DisplayImage(self.backimage)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
         self.detectButton.setEnabled(False)
         self.trainButton.setEnabled(True)
-            
 
-    def trainPlates(self):
+    def TrainPlates(self):
         blnKNNTrainingSuccessful = DetectChars.loadKNNDataAndTrainKNN()  # KNN eğitimi
         if blnKNNTrainingSuccessful == False:  # Eğer KNN eğitimi başarılı değilse
             QMessageBox.warning(self, 'KNN Taramasi',
@@ -371,15 +203,15 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         if (self.cameraStatus == True):
             self.detectButton.setEnabled(True)
 
-    def updateFrame(self):
+    def UpdateFrame(self):
         self.image = self.capture.read()
         if (self.plateEnabled):
-            detectedImage = self.detectPlate(self.image)
-            self.displayImage(detectedImage)
+            detectedImage = self.DetectPlate(self.image)
+            self.DisplayImage(detectedImage)
         else:
-            self.displayImage(self.image)
+            self.DisplayImage(self.image)
 
-    def detectPlate(self, img):
+    def DetectPlate(self, img):
         imgtop = self.image[0:240, 0:640]
         imgbottom = self.image[240:480, 0:640]
         cv2.rectangle(img, (10, 10), (630, 240), (0, 255, 0), 1)
@@ -437,15 +269,165 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         if(i==0):
             try:
                 #cv2.imwrite("./PlatePhotos/Original_{}_{}_{}.png".format(plate,date,time),imgPlate)  # Kırpılan plakayı ve işlenmiş halini kaydet
-                cv2.imwrite("./PlatePhotos/Thresh_{}_{}_{}.png".format(plate,date,time), imgThresh)
+                cv2.imwrite(path + "PlatePhotos/Thresh_{}_{}_{}.png".format(plate,date,time), imgThresh)
             except:
                 pass
             curs.execute("INSERT INTO Plates (Plate,Date,Time) VALUES(?,?,?)",
                          (plate, date, time))
             conn.commit()
-            self.Load_Database()
+            self.LoadDatabase()
 
-    def Load_Database(self):
+    def StartRecording(self):
+        MIN_CONTOUR_AREA = 100
+        RESIZED_IMAGE_WIDTH = 20
+        RESIZED_IMAGE_HEIGHT = 30
+        Check = True
+        if (len(str(self.addFontPage.editFontName.text())) != 0):
+            fontName = str(self.addFontPage.editFontName.text())
+            stream = open(self.fname, "rb")
+            bytes = bytearray(stream.read())
+            numpyarray = np.asarray(bytes, dtype=np.uint8)
+            imgTrainingNumbers = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
+            imgGray = cv2.cvtColor(imgTrainingNumbers, cv2.COLOR_BGR2GRAY)
+            imgBlurred = cv2.GaussianBlur(imgGray, (5, 5), 0)
+            imgThresh = cv2.adaptiveThreshold(imgBlurred,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+            imgThreshCopy = imgThresh.copy()
+            npaContours, npaHierarchy = cv2.findContours(imgThreshCopy, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            npaFlattenedImages = np.empty((0, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
+            charCount = 0
+            intClassifications = []
+            intValidChars = [ord('0'), ord('1'), ord('2'), ord('3'), ord('4'), ord('5'), ord('6'), ord('7'), ord('8'),
+                             ord('9'), ord('A'), ord('B'), ord('C'), ord('D'), ord('E'), ord('F'), ord('G'), ord('H'),
+                             ord('I'), ord('J'), ord('K'), ord('L'), ord('M'), ord('N'), ord('O'), ord('P'), ord('Q'),
+                             ord('R'), ord('S'), ord('T'), ord('U'), ord('V'), ord('W'), ord('X'), ord('Y'), ord('Z'),
+                             ord('/'), ord('-'), ord('@')]
+            for npaContour in npaContours:  # for each contour
+                if cv2.contourArea(npaContour) > MIN_CONTOUR_AREA:
+                    [intX, intY, intW, intH] = cv2.boundingRect(npaContour)
+                    cv2.rectangle(imgTrainingNumbers, (intX, intY), (intX + intW, intY + intH), (0, 0, 255), 3)
+                    imgROI = imgThresh[intY:intY + intH, intX:intX + intW]
+                    imgROIResized = cv2.resize(imgROI, (RESIZED_IMAGE_WIDTH, RESIZED_IMAGE_HEIGHT))
+                    self.DisplayPhoto(imgROIResized, "Char")
+                    self.DisplayPhoto(imgThresh, "Thresh")
+                    self.DisplayPhoto(imgTrainingNumbers, "Font")
+                    self.ShowCharPage()
+                    intChar = self.char
+                    if intChar == None:  #ESC
+                        Check = False
+                        QMessageBox.warning(self, 'Çıkış',
+                                            "İşlem iptal edildi!",
+                                            QMessageBox.Ok, QMessageBox.Ok)
+                        self.addFontPage.close()
+                    if intChar in intValidChars:
+                        intClassifications.append(intChar)
+                        npaFlattenedImage = imgROIResized.reshape((1, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
+                        npaFlattenedImages = np.append(npaFlattenedImages, npaFlattenedImage, 0)
+                        charCount = charCount + 1
+                        self.char = None
+                if (Check == False):
+                    break
+            fltClassifications = np.array(intClassifications, np.float32)
+            npaClassifications = fltClassifications.reshape((fltClassifications.size, 1))
+            if (Check == True):
+                if (len(fontName) > 0):
+                    search = curs.execute('SELECT FontName FROM Fonts WHERE FontName = ? ', (fontName,))
+                    results = search.fetchone()
+                    if (results == None):
+                        newpath = path + "Fonts" + "/" + str(fontName) + "/"
+                        an = datetime.datetime.now()
+                        fontDate = str(an.day) + "/" + str(an.month) + "/" + str(an.year)
+                        curs.execute("""INSERT INTO Fonts(FontName, FontDate, FontFileDir, CharCountInFont) 
+                                VALUES(?,?,?,?)""", (fontName, str(fontDate), newpath, str(charCount)))
+                        conn.commit()
+                        charCount = 0
+                        os.makedirs(newpath)
+                        np.savetxt(newpath + "classifications.txt",
+                                   npaClassifications)  # write flattened images to file
+                        np.savetxt(newpath + "flattened_images.txt", npaFlattenedImages)  #
+                        self.char == None
+                        self.addFontPage.close()
+                        QMessageBox.information(self, 'Kayıt Başarılı',
+                                                "Font için sınıflandırma ve fotoğraf dizeleri başarıyla oluşturuldu.",
+                                                QMessageBox.Ok, QMessageBox.Ok)
+        else:
+            QMessageBox.warning(self, 'Font İsim Hatası',
+                                "Lütfen font için isim giriniz!",
+                                QMessageBox.Ok, QMessageBox.Ok)
+
+    def GetCharInfo(self):
+        char = self.charPage.editChar.text()
+        if (char != ""):
+            self.char = ord(char)
+            self.char = int(self.char)
+            self.charPage.close()
+        else:
+            self.charPage.close()
+            self.addFontPage.close()
+            QMessageBox.warning(self, 'Harf Hatasi',
+                                "Lütfen tekrar deneyiniz!",
+                                QMessageBox.Ok, QMessageBox.Ok)
+
+    def LoadPhoto(self, fname):
+        stream = open(fname, "rb")
+        bytes = bytearray(stream.read())
+        numpyarray = np.asarray(bytes, dtype=np.uint8)
+        self.fontPhoto = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
+        self.DisplayPhoto(self.fontPhoto, "Font")
+
+    def AddCamera(self):
+        cameraName = self.addCameraPage.editCameraName.text()
+        cameraIP = self.addCameraPage.editCameraIP.text()
+        cameraIPAddition = self.addCameraPage.editCameraIPAddition.text()
+        username = self.addCameraPage.editUsername.text()
+        password = self.addCameraPage.editPassword.text()
+        protocolType = "rtsp"
+        minPixelWidth = Database.MIN_PIXEL_WIDTH
+        minPixelHeight = Database.MIN_PIXEL_HEIGHT
+        minPixelArea = Database.MIN_PIXEL_AREA
+        minPixelRatio = Database.MIN_ASPECT_RATIO
+        maxPixelRatio = Database.MAX_ASPECT_RATIO
+        minDiagSize = Database.MIN_DIAG_SIZE_MULTIPLE_AWAY
+        maxDiagSize = Database.MAX_DIAG_SIZE_MULTIPLE_AWAY
+        maxChangeInArea = Database.MAX_CHANGE_IN_AREA
+        maxChangeInWidth = Database.MAX_CHANGE_IN_WIDTH
+        maxChangeInHeight = Database.MAX_CHANGE_IN_HEIGHT
+        maxAngleBetweenChar = Database.MAX_ANGLE_BETWEEN_CHARS
+        minNumberOfMatchCharNumber = Database.MIN_NUMBER_OF_MATCHING_CHARS
+        topYOne = 0
+        topYTwo = 240
+        bottomYOne = 240
+        bottomYTwo = 480
+        search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
+        results = search.fetchone()
+        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != ""):
+            if (results == None):
+                if (self.addCameraPage.radioButtonRtsp.isChecked() == True):
+                    protocolType = "rtsp"
+                if (self.addCameraPage.radioButtonHttp.isChecked() == True):
+                    protocolType = "http"
+
+                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,TopYOne,TopYTwo,BottomYOne,BottomYTwo) 
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight,
+                minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth,
+                maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne,
+                bottomYTwo))
+                conn.commit()
+                protocolType = "rtsp"
+                self.addCameraPage.close()
+                QMessageBox.information(self, 'Kayit Basarili!',
+                                        "Kamera sisteme eklendi!\n",
+                                        QMessageBox.Ok, QMessageBox.Ok)
+            else:
+                QMessageBox.warning(self, 'Gecersiz Kamera İsmi!',
+                                    "Eklenmek istenen kamera adı sistemde mevcut!\n",
+                                    QMessageBox.Ok, QMessageBox.Ok)
+        else:
+            QMessageBox.warning(self, 'Gecersiz Bilgi!',
+                                "Eklenmek istenen bilgileri kontrol ediniz!\n",
+                                QMessageBox.Ok, QMessageBox.Ok)
+
+    def LoadDatabase(self):
         while self.tableWidget.rowCount() > 0:
             self.tableWidget.removeRow(0)
         content = 'SELECT Plate,Date,Time FROM Plates'
@@ -456,7 +438,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                 self.tableWidget.setItem(row_index, colm_index, QTableWidgetItem(str(colm_data)))
         return
 
-    def displayImage(self, img):
+    def DisplayImage(self, img):
         qformat = QImage.Format_Indexed8
         if len(img.shape) == 3:  # [0]=satırlar, [1]=sütunlar, [2]=kanallar
             if img.shape[2] == 4:
@@ -468,7 +450,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.imgLabel.setPixmap(QPixmap.fromImage(outImage))
         self.imgLabel.setScaledContents(True)
 
-    def displayPhoto(self, img,type):
+    def DisplayPhoto(self, img,type):
         qformat = QImage.Format_Indexed8
         if len(img.shape) == 3:  # [0]=satırlar, [1]=sütunlar, [2]=kanallar
             if img.shape[2] == 4:
@@ -493,7 +475,7 @@ class Cameras(QDialog,Ui_Dialog):
         super(Cameras,self).__init__(parent)
         self.setupUi(self)
         self.setWindowTitle('Kameralar')
-        self.loadCameraDatabase()
+        self.LoadCameraDatabase()
         self.InitUi()
         self.topYone= 0
         self.topYtwo= 240
@@ -507,13 +489,13 @@ class Cameras(QDialog,Ui_Dialog):
         self.oldCameraName = None
 
     def InitUi(self):
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.buttonAddCamera.clicked.connect(self.ShowAddCameraPage)
         self.buttonUpdateCamera.clicked.connect(self.ShowUpdateCameraPage)
         self.buttonDeleteCamera.clicked.connect(self.DeleteCamera)
         self.tableWidget.itemClicked.connect(self.TableClicked)
         self.buttonUpdateCamera.setEnabled(False)
         self.buttonDeleteCamera.setEnabled(False)
-
 
     def ShowUpdateCameraPage(self):
         self.updateCameraPage = UpdateCamera()
@@ -603,7 +585,7 @@ class Cameras(QDialog,Ui_Dialog):
                 maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne,
                 bottomYTwo))
                 conn.commit()
-                self.loadCameraDatabase()
+                self.LoadCameraDatabase()
                 protocolType = "rtsp"
                 self.addCameraPage.close()
                 QMessageBox.information(self, 'Kayit Basarili!',
@@ -617,6 +599,7 @@ class Cameras(QDialog,Ui_Dialog):
             QMessageBox.warning(self, 'Gecersiz Bilgi!',
                                 "Eklenmek istenen bilgileri kontrol ediniz!\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
+
     def CounterSize(self,topYOne,topYTwo,bottomYOne,bottomYTwo):
         if (int(topYOne) < 0):
             topYOne = 0
@@ -666,14 +649,13 @@ class Cameras(QDialog,Ui_Dialog):
                 else:
                     qformat = QImage.Format_RGB888
             img = self.ShowCounters(image, topYOne, topYTwo, bottomYOne, bottomYTwo)
-            self.displayPhoto(img)
+            self.DisplayPhoto(img)
         except:
-            self.displayPhoto(self.backimage)
+            self.DisplayPhoto(self.backimage)
             self.updateCameraPage.buttonShowCounters.setEnabled(False)
             QMessageBox.warning(self, 'Gecersiz Kamera İşlemi!',
                                 "Ulaşılmak istenen kameranın bilgileri hatalı!\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
-
 
     def ShowCounters(self,img,topyone,topytwo,bottomyone,bottomytwo):
         cv2.rectangle(img, (0, int(topyone)), (640, int(topytwo)), (255, 0, 0), 2)
@@ -780,7 +762,7 @@ class Cameras(QDialog,Ui_Dialog):
                 TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? WHERE CameraName = ?""",
                 (cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, self.oldCameraName))
             conn.commit()
-            self.loadCameraDatabase()
+            self.LoadCameraDatabase()
             self.updateCameraPage.close()
             QMessageBox.information(self, 'Guncelleme Basarili!',
                                     "Kamera konfigürasyon güncellemesi başarı ile yapıldı!.",
@@ -797,7 +779,7 @@ class Cameras(QDialog,Ui_Dialog):
                               maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
                               minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, self.oldCameraName))
                 conn.commit()
-                self.loadCameraDatabase()
+                self.LoadCameraDatabase()
                 self.updateCameraPage.close()
                 QMessageBox.information(self, 'Güncelleme Başarılı!',
                                         "Kamera konfigürasyon güncellemesi başarı ile yapıldı!.\n",
@@ -807,8 +789,7 @@ class Cameras(QDialog,Ui_Dialog):
                                     "Girilen kamera ismi sistemde mevcut!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
 
-
-    def displayPhoto(self, img):
+    def DisplayPhoto(self, img):
         qformat = QImage.Format_Indexed8
         if len(img.shape) == 3:  # rows[0],cols[1],channels[2]
             if (img.shape[2]) == 4:
@@ -837,12 +818,12 @@ class Cameras(QDialog,Ui_Dialog):
                     curs.execute("DELETE FROM Cameras WHERE CameraName=?", (cameraName,))
                     conn.commit()
 
-                    self.loadCameraDatabase()
+                    self.LoadCameraDatabase()
                 else:
-                    self.loadCameraDatabase()
+                    self.LoadCameraDatabase()
                 self.show()
 
-    def loadCameraDatabase(self):
+    def LoadCameraDatabase(self):
         while self.tableWidget.rowCount() > 0:
             self.tableWidget.removeRow(0)
         content = 'SELECT CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber FROM Cameras'
@@ -867,6 +848,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
         self.InitUi()
 
     def InitUi(self):
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.buttonDeleteFont.clicked.connect(self.DeleteFont)
         self.buttonUseFont.clicked.connect(self.UseFont)
         self.tableWidget.itemClicked.connect(self.TableClicked)
@@ -889,7 +871,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
                 if buttonReply == QMessageBox.Yes:
                     curs.execute("DELETE FROM Fonts WHERE FontName=?", (fontName,))
                     conn.commit()
-                    shutil.rmtree("./Fonts/" + str(fontName),ignore_errors=True)
+                    shutil.rmtree(path + "Fonts/" + str(fontName),ignore_errors=True)
                     self.LoadFontDatabase()
                 else:
                     self.LoadFontDatabase()
@@ -919,6 +901,7 @@ class AddFont(QDialog,AddFont.Ui_Dialog):
     def __init__(self,parent=None):
         super(AddFont,self).__init__(parent)
         self.setupUi(self)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Font Ekle')
 
 ##############################################################################################
@@ -926,6 +909,7 @@ class AddCamera(QDialog,AddCamera.Ui_Dialog):
     def __init__(self,parent=None):
         super(AddCamera,self).__init__(parent)
         self.setupUi(self)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Kamera Ekle')
 
 ##############################################################################################
@@ -933,6 +917,7 @@ class UpdateCamera(QDialog,UpdateCamera.Ui_Dialog):
     def __init__(self,parent=None):
         super(UpdateCamera,self).__init__(parent)
         self.setupUi(self)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Kamera Bilgilerini Güncelle')
 
 ##############################################################################################
@@ -940,12 +925,12 @@ class Char(QDialog,Char.Ui_Dialog):
     def __init__(self,parent=None):
         super(Char,self).__init__(parent)
         self.setupUi(self)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Harf Giriş Ekranı')
 
 def main():
     app = QApplication([])
     win = MainWithGui()
-    win.setWindowTitle('Vagon Plaka Takip')
     app.exec_()
 
 main()

@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import math
 
+##############################################################################################
 class PossibleChar:
-
     def __init__(self, _contour):
         self.contour = _contour
         self.boundingRect = cv2.boundingRect(self.contour)

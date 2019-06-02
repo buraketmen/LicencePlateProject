@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+##############################################################################################
 class PossiblePlate:
     def __init__(self):
         self.imgPlate = None

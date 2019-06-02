@@ -7,7 +7,6 @@ import DetectChars
 import PossiblePlate
 import PossibleChar
 
-# Sabit değişkenler ##########################################################################
 PLATE_WIDTH_PADDING_FACTOR = 1.1
 PLATE_HEIGHT_PADDING_FACTOR = 1.3
 SCALAR_BLACK = (0.0, 0.0, 0.0)
@@ -15,7 +14,7 @@ SCALAR_WHITE = (255.0, 255.0, 255.0)
 SCALAR_YELLOW = (0.0, 255.0, 255.0)
 SCALAR_GREEN = (0.0, 255.0, 0.0)
 SCALAR_RED = (0.0, 0.0, 255.0)
-###################################################################################################
+
 def detectPlatesInScene(imgOriginalScene,type):
     listOfPossiblePlates = []     # Dönüş değeri olacak
     height, width, numChannels = imgOriginalScene.shape
@@ -38,7 +37,6 @@ def detectPlatesInScene(imgOriginalScene,type):
             listOfPossiblePlates.append(possiblePlate)  # Olası plakalar listesine ekle
     return listOfPossiblePlates
 
-###################################################################################################
 def findPossibleCharsInScene(imgThresh):
     listOfPossibleChars = []  #Dönüş değeri olacak
     intCountOfPossibleChars = 0
@@ -53,7 +51,6 @@ def findPossibleCharsInScene(imgThresh):
             listOfPossibleChars.append(possibleChar)              # Olası listeye ekle
     return listOfPossibleChars
 
-###################################################################################################
 def extractPlate(imgOriginal, listOfMatchingChars):
     possiblePlate = PossiblePlate.PossiblePlate()    # Dönüş değeri olacak
 

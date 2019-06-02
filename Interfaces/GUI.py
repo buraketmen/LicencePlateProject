@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'GUI.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -15,10 +15,11 @@ class Ui_MainWindow(object):
         MainWindow.setWindowModality(QtCore.Qt.WindowModal)
         MainWindow.resize(1313, 869)
         MainWindow.setMinimumSize(QtCore.QSize(1313, 869))
-        MainWindow.setMaximumSize(QtCore.QSize(9999, 9999))
-        MainWindow.setFocusPolicy(QtCore.Qt.NoFocus)
+        MainWindow.setMaximumSize(QtCore.QSize(1920, 1080))
+        MainWindow.setFocusPolicy(QtCore.Qt.StrongFocus)
         MainWindow.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
         MainWindow.setDocumentMode(False)
+        MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -303,7 +304,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Plaka Takip"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Vagon Plaka Takip"))
         self.ComboBoxCameras.setItemText(0, _translate("MainWindow", "Kamera-1"))
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Okunan Plaka"))
