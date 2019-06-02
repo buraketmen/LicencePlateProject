@@ -2,37 +2,51 @@
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1234</width>
-    <height>792</height>
+    <width>1169</width>
+    <height>760</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>1234</width>
-    <height>792</height>
+    <width>1169</width>
+    <height>760</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>1234</width>
-    <height>792</height>
+    <width>1169</width>
+    <height>760</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="inputMethodHints">
+   <set>Qt::ImhNone</set>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
   <widget class="Line" name="line_3">
    <property name="geometry">
     <rect>
-     <x>830</x>
+     <x>810</x>
      <y>40</y>
      <width>31</width>
      <height>601</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+    </font>
    </property>
    <property name="orientation">
     <enum>Qt::Vertical</enum>
@@ -59,16 +73,23 @@
      <height>600</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+    </font>
+   </property>
    <property name="styleSheet">
-    <string notr="true">
-background-color: rgb(0, 0, 0)
+    <string notr="true">background-color: rgb(50,50,50)
 </string>
    </property>
    <property name="frameShape">
-    <enum>QFrame::WinPanel</enum>
+    <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>3</number>
    </property>
    <property name="text">
     <string/>
@@ -77,7 +98,7 @@ background-color: rgb(0, 0, 0)
   <widget class="QLabel" name="labelOriginalCroppedChar">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>840</x>
      <y>100</y>
      <width>311</width>
      <height>261</height>
@@ -95,16 +116,23 @@ background-color: rgb(0, 0, 0)
      <height>999</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+    </font>
+   </property>
    <property name="styleSheet">
-    <string notr="true">
-background-color: rgb(0, 0, 0)
+    <string notr="true">background-color: rgb(50,50,50)
 </string>
    </property>
    <property name="frameShape">
     <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>3</number>
    </property>
    <property name="text">
     <string/>
@@ -113,7 +141,7 @@ background-color: rgb(0, 0, 0)
   <widget class="QLabel" name="labelThreshCroppedChar">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>840</x>
      <y>380</y>
      <width>311</width>
      <height>261</height>
@@ -131,16 +159,23 @@ background-color: rgb(0, 0, 0)
      <height>201</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+    </font>
+   </property>
    <property name="styleSheet">
-    <string notr="true">
-background-color: rgb(0, 0, 0)
+    <string notr="true">background-color: rgb(50,50,50)
 </string>
    </property>
    <property name="frameShape">
     <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>3</number>
    </property>
    <property name="text">
     <string/>
@@ -151,13 +186,23 @@ background-color: rgb(0, 0, 0)
     <rect>
      <x>10</x>
      <y>0</y>
-     <width>1211</width>
+     <width>1141</width>
      <height>33</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+    </font>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
      <widget class="Line" name="line">
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+       </font>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -179,7 +224,8 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
-        <pointsize>13</pointsize>
+        <family>Calibri</family>
+        <pointsize>17</pointsize>
         <weight>75</weight>
         <bold>true</bold>
         <underline>false</underline>
@@ -194,6 +240,11 @@ background-color: rgb(0, 0, 0)
     </item>
     <item>
      <widget class="Line" name="line_2">
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+       </font>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -204,8 +255,8 @@ background-color: rgb(0, 0, 0)
   <widget class="QPushButton" name="buttonStartRecording">
    <property name="geometry">
     <rect>
-     <x>400</x>
-     <y>720</y>
+     <x>390</x>
+     <y>700</y>
      <width>411</width>
      <height>51</height>
     </rect>
@@ -224,7 +275,8 @@ background-color: rgb(0, 0, 0)
    </property>
    <property name="font">
     <font>
-     <pointsize>15</pointsize>
+     <family>Calibri</family>
+     <pointsize>20</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
@@ -256,23 +308,29 @@ background-color: rgb(0, 0, 0)
    </property>
    <property name="font">
     <font>
-     <pointsize>12</pointsize>
+     <family>Calibri</family>
+     <pointsize>16</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <property name="text">
-    <string>FOTOĞRAF YÜKLE</string>
+    <string>FONT FOTOĞRAFI YÜKLE</string>
    </property>
   </widget>
   <widget class="QSplitter" name="splitter">
    <property name="geometry">
     <rect>
-     <x>890</x>
-     <y>50</y>
+     <x>840</x>
+     <y>60</y>
      <width>311</width>
      <height>30</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+    </font>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -280,7 +338,8 @@ background-color: rgb(0, 0, 0)
    <widget class="QLabel" name="labelFontName">
     <property name="font">
      <font>
-      <pointsize>11</pointsize>
+      <family>Calibri</family>
+      <pointsize>14</pointsize>
       <weight>75</weight>
       <bold>true</bold>
      </font>
@@ -304,11 +363,27 @@ background-color: rgb(0, 0, 0)
     </property>
     <property name="font">
      <font>
+      <family>Calibri</family>
       <pointsize>12</pointsize>
      </font>
     </property>
+    <property name="inputMethodHints">
+     <set>Qt::ImhNone</set>
+    </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="maxLength">
+     <number>30</number>
+    </property>
+    <property name="frame">
+     <bool>true</bool>
+    </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Normal</enum>
+    </property>
+    <property name="cursorMoveStyle">
+     <enum>Qt::LogicalMoveStyle</enum>
     </property>
     <property name="clearButtonEnabled">
      <bool>true</bool>

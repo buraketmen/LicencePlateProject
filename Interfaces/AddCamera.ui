@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -28,7 +31,7 @@
   <widget class="QPushButton" name="buttonAddCamera">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>110</x>
      <y>320</y>
      <width>261</width>
      <height>51</height>
@@ -48,7 +51,8 @@
    </property>
    <property name="font">
     <font>
-     <pointsize>15</pointsize>
+     <family>Calibri</family>
+     <pointsize>18</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
@@ -65,6 +69,11 @@
      <width>231</width>
      <height>41</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="spacing">
@@ -86,7 +95,8 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>16</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -112,7 +122,8 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>16</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -129,13 +140,14 @@
     <rect>
      <x>40</x>
      <y>260</y>
-     <width>96</width>
+     <width>111</width>
      <height>42</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <pointsize>11</pointsize>
+     <family>Calibri</family>
+     <pointsize>14</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
@@ -149,9 +161,14 @@
     <rect>
      <x>40</x>
      <y>50</y>
-     <width>102</width>
+     <width>108</width>
      <height>201</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
@@ -164,7 +181,8 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>14</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -178,7 +196,8 @@
      <widget class="QLabel" name="labelCameraIP">
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>14</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -192,7 +211,8 @@
      <widget class="QLabel" name="labelCameraIPAddition">
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>14</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -206,7 +226,8 @@
      <widget class="QLabel" name="labelUsername">
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>14</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -220,7 +241,8 @@
      <widget class="QLabel" name="labelPassword">
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <family>Calibri</family>
+        <pointsize>14</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -241,9 +263,19 @@
      <height>33</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
+   </property>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
      <widget class="Line" name="line">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+       </font>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -265,7 +297,8 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>13</pointsize>
+        <family>Calibri</family>
+        <pointsize>16</pointsize>
         <weight>75</weight>
         <bold>true</bold>
         <underline>false</underline>
@@ -280,6 +313,11 @@
     </item>
     <item>
      <widget class="Line" name="line_2">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+       </font>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -295,6 +333,11 @@
      <width>263</width>
      <height>206</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
@@ -313,6 +356,7 @@
       </property>
       <property name="font">
        <font>
+        <family>Arial</family>
         <pointsize>12</pointsize>
        </font>
       </property>
@@ -340,6 +384,7 @@
       </property>
       <property name="font">
        <font>
+        <family>Arial</family>
         <pointsize>12</pointsize>
        </font>
       </property>
@@ -367,6 +412,7 @@
       </property>
       <property name="font">
        <font>
+        <family>Arial</family>
         <pointsize>12</pointsize>
        </font>
       </property>
@@ -391,6 +437,7 @@
       </property>
       <property name="font">
        <font>
+        <family>Arial</family>
         <pointsize>12</pointsize>
        </font>
       </property>
@@ -415,6 +462,7 @@
       </property>
       <property name="font">
        <font>
+        <family>Arial</family>
         <pointsize>12</pointsize>
        </font>
       </property>

@@ -13,13 +13,13 @@ import FontGenerator
 import Database
 import datetime
 import shutil
-from Cameras import Ui_Dialog
-import Fonts
-import AddCamera
-import AddFont
-import UpdateCamera
-import Char
-from GUI import Ui_MainWindow
+from Interfaces.Cameras import Ui_Dialog
+import Interfaces.Fonts as Fonts
+import Interfaces.AddCamera as AddCamera
+import Interfaces.AddFont as AddFont
+import Interfaces.UpdateCamera as UpdateCamera
+import Interfaces.Char as Char
+from Interfaces.GUI import Ui_MainWindow
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, Qt, QRegExp
 from PyQt5.QtGui import QImage, QPixmap, QRegExpValidator
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QTableWidgetItem,QTableWidgetItem, QFileDialog, QWidget
@@ -28,6 +28,8 @@ import sqlite3
 locale.setlocale(locale.LC_ALL, '')
 conn = sqlite3.connect('PlateDetectionDB.db')
 curs = conn.cursor()
+path = os.getcwd() + "/"
+path = str(path)
 
 #curs.execute("DELETE FROM Plates")
 def Screenshot(ip):
@@ -54,7 +56,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.checkPlateBottom = None
         self.checkBottom = 0
         try:
-            self.backimage= cv2.imread('background.jpg')
+            self.backimage= cv2.imread(path + '/Fonts/background.png')
         except:
             pass
         self.InitUi()

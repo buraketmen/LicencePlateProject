@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>221</width>
-    <height>102</height>
+    <width>216</width>
+    <height>95</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>216</width>
+    <height>95</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>216</width>
+    <height>95</height>
+   </size>
   </property>
   <property name="mouseTracking">
    <bool>false</bool>
@@ -19,31 +31,46 @@
   <widget class="QPushButton" name="buttonAccept">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>30</x>
      <y>50</y>
      <width>161</width>
      <height>41</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <pointsize>14</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
    <property name="text">
     <string>ONAYLA</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
      <width>201</width>
-     <height>31</height>
+     <height>33</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <widget class="QLabel" name="label">
       <property name="minimumSize">
        <size>
-        <width>141</width>
+        <width>120</width>
         <height>31</height>
        </size>
       </property>
@@ -55,7 +82,8 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>10</pointsize>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -75,9 +103,10 @@
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>14</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
      </widget>

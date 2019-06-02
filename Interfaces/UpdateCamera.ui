@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1192</width>
-    <height>787</height>
+    <width>1114</width>
+    <height>781</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>778</width>
-    <height>464</height>
+    <width>1114</width>
+    <height>781</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>9999</width>
-    <height>9999</height>
+    <width>1114</width>
+    <height>781</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -48,6 +48,7 @@
    </property>
    <property name="font">
     <font>
+     <family>Calibri</family>
      <pointsize>15</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -60,49 +61,21 @@
   <widget class="Line" name="line_3">
    <property name="geometry">
     <rect>
-     <x>650</x>
-     <y>30</y>
+     <x>670</x>
+     <y>10</y>
      <width>31</width>
-     <height>721</height>
+     <height>761</height>
     </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelCameraOptions">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>0</y>
-     <width>141</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>141</width>
-     <height>31</height>
-    </size>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>141</width>
-     <height>31</height>
-    </size>
    </property>
    <property name="font">
     <font>
-     <pointsize>13</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-     <underline>false</underline>
-     <strikeout>false</strikeout>
-     <kerning>true</kerning>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
     </font>
    </property>
-   <property name="text">
-    <string>KAMERA AYARI</string>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
    </property>
   </widget>
   <widget class="QWidget" name="layoutWidget">
@@ -110,15 +83,23 @@
     <rect>
      <x>720</x>
      <y>40</y>
-     <width>151</width>
+     <width>111</width>
      <height>211</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <widget class="QLabel" name="labelCameraName">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -133,6 +114,7 @@
      <widget class="QLabel" name="labelCameraIP">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -147,6 +129,7 @@
      <widget class="QLabel" name="labelCameraIPAddition">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -161,6 +144,7 @@
      <widget class="QLabel" name="labelUserName">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -175,6 +159,7 @@
      <widget class="QLabel" name="labelPassword">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -189,6 +174,7 @@
      <widget class="QLabel" name="labelProtocolType">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -222,16 +208,26 @@
      <height>480</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
    <property name="styleSheet">
-    <string notr="true">
-background-color: rgb(0, 0, 0)
+    <string notr="true">background-color: rgb(50,50,50)
+
 </string>
    </property>
    <property name="frameShape">
-    <enum>QFrame::WinPanel</enum>
+    <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
    </property>
    <property name="text">
     <string/>
@@ -260,6 +256,7 @@ background-color: rgb(0, 0, 0)
    </property>
    <property name="font">
     <font>
+     <family>Calibri</family>
      <pointsize>15</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -267,41 +264,6 @@ background-color: rgb(0, 0, 0)
    </property>
    <property name="text">
     <string>SINIRLARI GÖSTER</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelCameraInfo">
-   <property name="geometry">
-    <rect>
-     <x>820</x>
-     <y>0</y>
-     <width>171</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>141</width>
-     <height>31</height>
-    </size>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>171</width>
-     <height>31</height>
-    </size>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>13</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-     <underline>false</underline>
-     <strikeout>false</strikeout>
-     <kerning>true</kerning>
-    </font>
-   </property>
-   <property name="text">
-    <string>KAMERA BİLGİLERİ</string>
    </property>
   </widget>
   <widget class="QLabel" name="labelCharReadingCalibration">
@@ -327,6 +289,7 @@ background-color: rgb(0, 0, 0)
    </property>
    <property name="font">
     <font>
+     <family>Calibri</family>
      <pointsize>13</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -342,7 +305,7 @@ background-color: rgb(0, 0, 0)
   <widget class="QWidget" name="layoutWidget_3">
    <property name="geometry">
     <rect>
-     <x>1000</x>
+     <x>980</x>
      <y>300</y>
      <width>100</width>
      <height>411</height>
@@ -359,6 +322,13 @@ background-color: rgb(0, 0, 0)
      <width>100</width>
      <height>16777215</height>
     </size>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_5">
     <item>
@@ -377,7 +347,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -404,7 +377,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -431,7 +407,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="clearButtonEnabled">
@@ -455,7 +434,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -482,7 +464,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -509,7 +494,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -536,7 +524,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -563,7 +554,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -590,7 +584,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -617,7 +614,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -644,7 +644,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -671,7 +674,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -687,17 +693,25 @@ background-color: rgb(0, 0, 0)
   <widget class="QWidget" name="layoutWidget_4">
    <property name="geometry">
     <rect>
-     <x>700</x>
+     <x>740</x>
      <y>300</y>
-     <width>291</width>
+     <width>231</width>
      <height>401</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_6">
     <item>
      <widget class="QLabel" name="labelMinPixelWidth">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -712,6 +726,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMinPixelHeight">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -726,6 +741,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMinPixelArea">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -740,6 +756,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMinPixelRatio">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -754,6 +771,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMaxPixelRatio">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -768,6 +786,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMinDiagSize">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -782,6 +801,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMaxDiagSize">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -796,6 +816,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMaxChangeInArea">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -810,6 +831,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMaxChangeInWidth">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -824,6 +846,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMaChangeInHeight">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -838,6 +861,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMaxAngleBetweenChar">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -852,6 +876,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelMinNumberOfMatchCharNumber">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -867,11 +892,18 @@ background-color: rgb(0, 0, 0)
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>390</x>
+     <x>330</x>
      <y>530</y>
      <width>102</width>
      <height>171</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
@@ -890,7 +922,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -917,7 +952,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -944,7 +982,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -971,7 +1012,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -989,15 +1033,23 @@ background-color: rgb(0, 0, 0)
     <rect>
      <x>150</x>
      <y>530</y>
-     <width>221</width>
+     <width>171</width>
      <height>171</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
      <widget class="QLabel" name="labelTopY1">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -1012,6 +1064,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelTopY2">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -1026,6 +1079,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelBottomY1">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -1040,6 +1094,7 @@ background-color: rgb(0, 0, 0)
      <widget class="QLabel" name="labelBottomY2">
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
@@ -1055,11 +1110,18 @@ background-color: rgb(0, 0, 0)
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>840</x>
      <y>40</y>
      <width>263</width>
      <height>211</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Calibri</family>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
@@ -1078,7 +1140,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -1105,7 +1170,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -1132,7 +1200,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="clearButtonEnabled">
@@ -1156,7 +1227,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -1183,7 +1257,10 @@ background-color: rgb(0, 0, 0)
       </property>
       <property name="font">
        <font>
+        <family>Calibri</family>
         <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="text">
@@ -1215,6 +1292,7 @@ background-color: rgb(0, 0, 0)
         </property>
         <property name="font">
          <font>
+          <family>Calibri</family>
           <pointsize>11</pointsize>
           <weight>75</weight>
           <bold>true</bold>
@@ -1241,6 +1319,7 @@ background-color: rgb(0, 0, 0)
         </property>
         <property name="font">
          <font>
+          <family>Calibri</family>
           <pointsize>11</pointsize>
           <weight>75</weight>
           <bold>true</bold>
@@ -1252,6 +1331,78 @@ background-color: rgb(0, 0, 0)
        </widget>
       </item>
      </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>-180</x>
+     <y>10</y>
+     <width>1641</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="labelCameraOptions">
+      <property name="minimumSize">
+       <size>
+        <width>141</width>
+        <height>31</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>141</width>
+        <height>31</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>13</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+        <underline>false</underline>
+        <strikeout>false</strikeout>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="text">
+       <string>KAMERA AYARI</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelCameraInfo">
+      <property name="minimumSize">
+       <size>
+        <width>141</width>
+        <height>31</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>171</width>
+        <height>31</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>13</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+        <underline>false</underline>
+        <strikeout>false</strikeout>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="text">
+       <string>KAMERA BİLGİLERİ</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
