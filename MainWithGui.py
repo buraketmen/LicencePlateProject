@@ -31,10 +31,20 @@ import time
 locale.setlocale(locale.LC_ALL, '')
 conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
 curs = conn.cursor()
-path = os.getcwd() + "/"
+path = os.getcwd() + "\\"
 path = str(path)
+print(path)
 
 image = None
+
+def GetResponse(ip):
+    hostname = ip
+    response = os.system("ping -c 1 " + "http://"+hostname)
+    if response == 0:
+        return True
+    else:
+        return False
+
 def Screenshot(ip):
     global ret, image
     frameSize = (640, 480)
@@ -59,7 +69,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.checkPlateBottom = None
         self.listCamera = []
         self.checkBottom = 0
-        self.backimage = cv2.imread(path + '/Fonts/background.png')
+        self.backimage = cv2.imread(path + '\\Fonts\\background.png')
         self.InitUi()
         self.UpdateStatusBar()
 
@@ -178,21 +188,23 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
 
     def DetectWebcam(self, status):
         txtfile = open("ThreadStatus.txt", "w")
+        self.trainButton.setEnabled(False)
         if status:
             txtfile.write("True")
             txtfile.close()
             cameraStatus = "Çalışmıyor"
             self.detectButton.setText('Plaka Tanımayı Durdur')
+
             self.plateEnabled = True
             if(len(self.listCamera)!=0):
                 for cameraName in self.listCamera:
-                    print("deneme")
                     t = DetectPlateThread.camThread(cameraName)
                     t.daemon = True
                     t.start()
         else:
             txtfile.write("False")
             self.detectButton.setText('Plaka Tanimayi Baslat')
+            self.trainButton.setEnabled(True)
             self.plateEnabled = False
 
     def getIP(self):
@@ -233,10 +245,11 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.capture.start()
         while self.cameraStatus == True:
             self.image = self.capture.read()
-            if (len(self.image) != 0):
-                self.DisplayImage(self.image)
-            else:
-                self.DisplayImage(self.backimage)
+            if(self.image !=None):
+                if (len(self.image) != 0):
+                    self.DisplayImage(self.image)
+                else:
+                    self.DisplayImage(self.backimage)
             if (self.plateEnabled):
                 self.LoadDatabase()
         self.capture.stream.stream.release()
@@ -247,11 +260,6 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.cameraStatus=False
         self.DisplayImage(self.backimage)
         self.ComboBoxCameras.setEnabled(True)
-        if(self.plateEnabled != False):
-            self.plateEnabled= False
-            self.detectButton.toggle()
-            self.detectButton.setText('Plaka Tanimayi Baslat')
-
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
 
@@ -325,7 +333,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     search = curs.execute('SELECT FontName FROM Fonts WHERE FontName = ? ', (fontName,))
                     results = search.fetchone()
                     if (results == None):
-                        newpath = path + "Fonts" + "/" + str(fontName) + "/"
+                        newpath = path + "Fonts" + "\\" + str(fontName) + "\\"
                         an = datetime.datetime.now()
                         fontDate = str(an.day) + "/" + str(an.month) + "/" + str(an.year)
                         curs.execute("""INSERT INTO Fonts(FontName, FontDate, FontFileDir, CharCountInFont) 
@@ -470,7 +478,7 @@ class Cameras(QDialog,Ui_Dialog):
         super(Cameras,self).__init__(parent)
         self.setupUi(self)
         try:
-            self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
+            self.setWindowIcon(QIcon(str(path) + "\\vagonplaka.png"))
         except Exception:
             pass
         self.setWindowTitle('Kameralar')
@@ -481,7 +489,7 @@ class Cameras(QDialog,Ui_Dialog):
         self.bottomYone = 240
         self.bottomYtwo = 480
         try:
-            self.backimage= cv2.imread(path + 'Fonts/background.png')
+            self.backimage= cv2.imread(path + 'Fonts\\background.png')
         except:
             pass
         self.bottomYtwo =480
@@ -642,23 +650,29 @@ class Cameras(QDialog,Ui_Dialog):
             ip = str(protocolType) + "://" + str(username) + ":" + str(password) + "@" + str(cameraIP) + "/" + cameraIPAddition
         else:
             ip = str(protocolType) + "://" + str(cameraIP) + "/" + cameraIPAddition
-        self.GetFrameFromCamera(ip, topYOne, topYTwo, bottomYOne, bottomYTwo)
+        self.GetFrameFromCamera(cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo)
 
-    def GetFrameFromCamera(self, ip, topYOne, topYTwo, bottomYOne, bottomYTwo):
+    def GetFrameFromCamera(self, cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo):
         global image
-        deneme = threading.Thread(target=Screenshot, args=(ip,))
-        deneme.daemon = True
-        deneme.start()
-        if (image != None):
-            img = self.ShowCounters(image, topYOne, topYTwo, bottomYOne, bottomYTwo)
-            self.DisplayPhoto(img)
+        if(GetResponse(cameraIP)):
+            deneme = threading.Thread(target=Screenshot, args=(ip,))
+            deneme.daemon = True
+            deneme.start()
+            if (image != None):
+                img = self.ShowCounters(image, topYOne, topYTwo, bottomYOne, bottomYTwo)
+                self.DisplayPhoto(img)
+            else:
+                self.DisplayPhoto(self.backimage)
+                self.updateCameraPage.buttonShowCounters.setEnabled(False)
+                QMessageBox.warning(self, 'Kamera Hatası!',
+                                    "Ulaşılmak istenen kameraya erişim sağlanamadı. Lütfen bilgileri kontrol ediniz!\n" + "IP: " + ip + "\n",
+                                    QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.DisplayPhoto(self.backimage)
             self.updateCameraPage.buttonShowCounters.setEnabled(False)
             QMessageBox.warning(self, 'Kamera Hatası!',
                                 "Ulaşılmak istenen kameraya erişim sağlanamadı. Lütfen bilgileri kontrol ediniz!\n" + "IP: " + ip + "\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
-
 
     def ShowCounters(self,img,topyone,topytwo,bottomyone,bottomytwo):
         cv2.rectangle(img, (0, int(topyone)), (640, int(topytwo)), (255, 0, 0), 2)
@@ -727,7 +741,7 @@ class Cameras(QDialog,Ui_Dialog):
                     self.updateCameraPage.radioButtonHttp.setChecked(True)
                 if(cameraStatus=="Çalışıyor"):
                     self.updateCameraPage.radioButtonWorking.setChecked(True)
-                    self.GetFrameFromCamera(ip, topYOne, topYTwo, bottomYOne, bottomYTwo)
+                    self.GetFrameFromCamera(cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo)
                 if(cameraStatus=="Çalışmıyor"):
                     self.updateCameraPage.radioButtonNotWorking.setChecked(True)
                     self.updateCameraPage.buttonShowCounters.setEnabled(False)
@@ -768,11 +782,13 @@ class Cameras(QDialog,Ui_Dialog):
             cameraStatus = "Çalışıyor"
         if(self.updateCameraPage.radioButtonNotWorking.isChecked()==True):
             cameraStatus = "Çalışmıyor"
-        search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
-        searchTwo = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName.lower(),))
-        results = search.fetchone()
-        resultsTwo = search.fetchone()
-        if(str(self.oldCameraName).lower() == cameraName.lower()):
+        search = curs.execute('SELECT CameraName FROM Cameras')
+        check = False
+        rows = search.fetchall()
+        for row in rows:
+            if (str(row[0]).lower() == cameraName.lower()):
+                check = True
+        if(str(self.oldCameraName) == cameraName):
             curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , Username = ? , Password = ? , 
                 ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
                 MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
@@ -787,16 +803,19 @@ class Cameras(QDialog,Ui_Dialog):
                                     "Kamera konfigürasyon güncellemesi başarı ile yapıldı!",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
-            if (results == None and resultsTwo == None):
-                curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , Username = ? , Password = ? , 
-                                ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
-                                MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
-                                MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , MinNumberOfMatchCharNumber = ? , TopYOne = ? , 
-                                TopYTwo = ? , BottomYOne = ? , BottomYTwo = ?, CameraStatus = ? WHERE CameraName = ?""",
-                             (cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth,
+            if(check==False):
+                curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , 
+                Username = ? , Password = ? , ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , 
+                MinPixelArea = ? , MinPixelRatio = ? , MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , 
+                MaxChangeInArea = ? , MaxChangeInWidth = ? , MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , 
+                MinNumberOfMatchCharNumber = ? , TopYOne = ? , TopYTwo = ? , BottomYOne = ? , BottomYTwo = ?, 
+                CameraStatus = ? WHERE CameraName = ?""",
+                             (cameraName, cameraIP, cameraIPAddition, username, password, protocolType,
+                              minPixelWidth,
                               minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize,
                               maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
-                              minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus, self.oldCameraName))
+                              minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus,
+                              self.oldCameraName))
                 conn.commit()
                 self.LoadCameraDatabase()
                 self.updateCameraPage.close()
@@ -807,6 +826,7 @@ class Cameras(QDialog,Ui_Dialog):
                 QMessageBox.warning(self, 'Güncelleme Hatası!',
                                     "Girilen kamera ismi sistemde mevcut!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
+
 
     def DisplayPhoto(self, img):
         qformat = QImage.Format_Indexed8
@@ -866,7 +886,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
         self.setupUi(self)
         self.fontName = None
         try:
-            self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
+            self.setWindowIcon(QIcon(str(path) + "\\vagonplaka.png"))
         except Exception:
             pass
         self.setWindowTitle('Fontlar')
@@ -901,7 +921,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
             curs.execute("DELETE FROM Fonts WHERE FontName=?", (fontName,))
             conn.commit()
             fontStatus = open("FontStatus.txt", "r")
-            direc = path + "Fonts/" + str(fontName)
+            direc = path + "Fonts\\" + str(fontName)
             if (str(fontStatus.readline()) == direc):
                 txtfile = open("FontStatus.txt", "w")
                 txtfile.write(path + "Fonts")
@@ -921,7 +941,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if buttonReply == QMessageBox.Yes:
             txtfile = open("FontStatus.txt", "w")
-            txtfile.write(path + "Fonts/" +str(fontName))
+            txtfile.write(path + "Fonts\\" +str(fontName))
             txtfile.close()
             self.LoadFontDatabase()
         else:
@@ -949,7 +969,7 @@ class AddFont(QDialog,AddFont.Ui_Dialog):
         super(AddFont,self).__init__(parent)
         self.setupUi(self)
         try:
-            self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
+            self.setWindowIcon(QIcon(str(path) + "\\vagonplaka.png"))
         except Exception:
             pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
@@ -999,5 +1019,4 @@ def main():
     except Exception:
         pass
     app.exec_()
-
 main()

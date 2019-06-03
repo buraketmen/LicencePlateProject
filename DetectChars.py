@@ -41,7 +41,7 @@ def loadKNNDataAndTrainKNN():
     validContoursWithData = []              # Boş liste tanımalama
     try:
         fontStatus = open("FontStatus.txt", "r")
-        direc = fontStatus.readline() +"/"
+        direc = fontStatus.readline() +"\\"
         npaClassifications = np.loadtxt(direc + "classifications.txt", np.float32)     # Eğitim sınıflandırmalarından okuma
         npaFlattenedImages = np.loadtxt(direc + "flattened_images.txt", np.float32)  # Eğitim resimlerini okuma
     except:                                                                    # Eğer dosya açılamadıysa
@@ -95,7 +95,7 @@ def detectCharsInPlates(listOfPossiblePlates,type,cameraName):
     for possiblePlate in listOfPossiblePlates:          # Her olası plaka için for döngüsü
         possiblePlate.imgGrayscale, possiblePlate.imgThresh = Preprocess.preprocess(possiblePlate.imgPlate, type)     # Gri tonlamalı ve threshold görüntüler elde etmek için önişlem
         # Daha kolay görüntüleme ve karakter algılama için plaka görüntüsünün boyutunu arttırır
-        #possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx = 1.0, fy = 1.0)
+        possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx = 1.5, fy = 1.5)
         #Gri alanları gidermek için tekrar threshold
         thresholdValue, possiblePlate.imgThresh = cv2.threshold(possiblePlate.imgThresh, 0.0, 255.0, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 

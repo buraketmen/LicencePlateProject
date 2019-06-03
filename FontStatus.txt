@@ -1,1 +1,1 @@
-./Fonts
+C:\Users\HasanBurakKetmen\PycharmProjects\LicencePlateWithRestApi\venv\Fonts\Motel
