@@ -904,7 +904,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
             direc = path + "Fonts/" + str(fontName)
             if (str(fontStatus.readline()) == direc):
                 txtfile = open("FontStatus.txt", "w")
-                txtfile.write(path + "Fonts/")
+                txtfile.write(path + "Fonts")
                 txtfile.close()
             shutil.rmtree(direc, ignore_errors=True)
             self.LoadFontDatabase()
