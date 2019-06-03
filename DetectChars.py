@@ -6,6 +6,9 @@ import random
 import Preprocess
 import PossibleChar
 
+path = os.getcwd() + "/"
+path = str(path)
+
 kNearest = cv2.ml.KNearest_create()
 SCALAR_BLACK = (0.0, 0.0, 0.0)
 SCALAR_WHITE = (255.0, 255.0, 255.0)
@@ -37,8 +40,10 @@ def loadKNNDataAndTrainKNN():
     allContoursWithData = []                # Boş liste tanımlama
     validContoursWithData = []              # Boş liste tanımalama
     try:
-        npaClassifications = np.loadtxt("./Fonts/classifications.txt", np.float32)     # Eğitim sınıflandırmalarından okuma
-        npaFlattenedImages = np.loadtxt("./Fonts/flattened_images.txt", np.float32)  # Eğitim resimlerini okuma
+        fontStatus = open("FontStatus.txt", "r")
+        direc = fontStatus.readline() +"/"
+        npaClassifications = np.loadtxt(direc + "classifications.txt", np.float32)     # Eğitim sınıflandırmalarından okuma
+        npaFlattenedImages = np.loadtxt(direc + "flattened_images.txt", np.float32)  # Eğitim resimlerini okuma
     except:                                                                    # Eğer dosya açılamadıysa
         pass
     npaClassifications = npaClassifications.reshape((npaClassifications.size, 1))       # Numpy dizisini 1 boyutlu hale getirme

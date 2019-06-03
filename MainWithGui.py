@@ -59,11 +59,9 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.checkPlateBottom = None
         self.listCamera = []
         self.checkBottom = 0
-        self.oldComboText = None
         self.backimage = cv2.imread(path + '/Fonts/background.png')
         self.InitUi()
         self.UpdateStatusBar()
-        self.oldComboText = self.ComboBoxCameras.currentText()
 
     def InitUi(self):
         self.show()
@@ -107,16 +105,16 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         while True:
             listofCameras= []
             searchall = curs.execute('SELECT CameraName FROM Cameras WHERE CameraStatus = ? ', (cameraStatus,))
-            self.ComboBoxCameras.clear()
             rows = searchall.fetchall()
             if(len(rows)!=0):
                 for row in rows:
                     listofCameras.append(row[0])
-                self.ComboBoxCameras.addItems(listofCameras)
                 if(self.listCamera!=listofCameras):
                     del self.listCamera
                     self.listCamera = listofCameras.copy()
-            time.sleep(10)
+                    self.ComboBoxCameras.clear()
+                    self.ComboBoxCameras.addItems(self.listCamera)
+            time.sleep(5)
         
     def ShowCamerasPage(self):
         self.cameraPage = Cameras()
@@ -182,6 +180,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         txtfile = open("ThreadStatus.txt", "w")
         if status:
             txtfile.write("True")
+            txtfile.close()
             cameraStatus = "Çalışmıyor"
             self.detectButton.setText('Plaka Tanımayı Durdur')
             self.plateEnabled = True
@@ -865,6 +864,7 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
     def __init__(self,parent=None):
         super(Fonts,self).__init__(parent)
         self.setupUi(self)
+        self.fontName = None
         try:
             self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
         except Exception:
@@ -881,30 +881,52 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
         self.buttonDeleteFont.setEnabled(False)
         self.LoadFontDatabase()
 
-    def DeleteFont(self):
-        self.buttonUseFont.setEnabled(False)
-        self.buttonDeleteFont.setEnabled(False)
+    def GetFontName(self):
         content = "SELECT * FROM Fonts"
         res = conn.execute(content)
         for row in enumerate(res):
             if row[0] == self.tableWidget.currentRow():
                 data = row[1]
                 fontName = data[1]
-                buttonReply = QMessageBox.question(self, 'Font Silme İşlemi', str(fontName) +
-                                                   " isimli fontu sistemden silmek istediğinize emin misiniz?",
-                                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if buttonReply == QMessageBox.Yes:
-                    curs.execute("DELETE FROM Fonts WHERE FontName=?", (fontName,))
-                    conn.commit()
-                    shutil.rmtree(path + "Fonts/" + str(fontName),ignore_errors=True)
-                    self.LoadFontDatabase()
-                else:
-                    self.LoadFontDatabase()
-                self.show()
+        return fontName
+
+    def DeleteFont(self):
+        self.buttonUseFont.setEnabled(False)
+        self.buttonDeleteFont.setEnabled(False)
+        fontName = self.GetFontName()
+        buttonReply = QMessageBox.question(self, 'Font Silme İşlemi', str(fontName) +
+                                           " isimli fontu sistemden silmek istediğinize emin misiniz?",
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            curs.execute("DELETE FROM Fonts WHERE FontName=?", (fontName,))
+            conn.commit()
+            fontStatus = open("FontStatus.txt", "r")
+            direc = path + "Fonts/" + str(fontName)
+            if (str(fontStatus.readline()) == direc):
+                txtfile = open("FontStatus.txt", "w")
+                txtfile.write(path + "Fonts/")
+                txtfile.close()
+            shutil.rmtree(direc, ignore_errors=True)
+            self.LoadFontDatabase()
+        else:
+            self.LoadFontDatabase()
+        self.show()
 
     def UseFont(self):
         self.buttonUseFont.setEnabled(False)
         self.buttonDeleteFont.setEnabled(False)
+        fontName = self.GetFontName()
+        buttonReply = QMessageBox.question(self, 'Font Değiştirme', str(fontName) +
+                                           " isimli fontu kullanmak istediğinize emin misiniz?",
+                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            txtfile = open("FontStatus.txt", "w")
+            txtfile.write(path + "Fonts/" +str(fontName))
+            txtfile.close()
+            self.LoadFontDatabase()
+        else:
+            self.LoadFontDatabase()
+        self.show()
 
     def TableClicked(self):
         self.buttonUseFont.setEnabled(True)

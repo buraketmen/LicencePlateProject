@@ -52,7 +52,7 @@ class camThread(threading.Thread):
         while True:
             if(self.frameStatus=="False"):
                 break
-            self.ThreadStatus = open("ThreadStatus.txt", "r")
+            ThreadStatus = open("ThreadStatus.txt", "r")
             if (str(ThreadStatus.readline()) == "False"):
                 break
             img = self.capture.read()
@@ -64,7 +64,6 @@ class camThread(threading.Thread):
                 listOfPossiblePlatesBottom = DetectPlates.detectPlatesInScene(imgbottom, 1)
                 listOfPossiblePlatesBottom = DetectChars.detectCharsInPlates(listOfPossiblePlatesBottom, 1,
                                                                              self.cameraName)
-
                 listOfPossiblePlatesTop = DetectPlates.detectPlatesInScene(imgtop, 2)  # Plakaları tespit et
                 listOfPossiblePlatesTop = DetectChars.detectCharsInPlates(listOfPossiblePlatesTop, 2, self.cameraName)
                 if (len(listOfPossiblePlatesTop) != 0):
@@ -98,8 +97,6 @@ class camThread(threading.Thread):
                                 self.Add2Database(licPlateBottom.strChars, licPlateBottom.imgPlate,
                                                   licPlateBottom.imgThresh, imgbottom)
                             self.checkPlateBottom = licPlateBottom.strChars
-            else:
-                pass
 
 
     def Add2Database(self, plate, imgPlate, imgThresh, img):
