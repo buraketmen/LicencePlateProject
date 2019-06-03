@@ -37,7 +37,6 @@ class Ui_MainWindow(object):
         self.ComboBoxCameras.setMaxVisibleItems(100)
         self.ComboBoxCameras.setFrame(True)
         self.ComboBoxCameras.setObjectName("ComboBoxCameras")
-        self.ComboBoxCameras.addItem("")
         self.gridLayout.addWidget(self.ComboBoxCameras, 0, 1, 1, 1)
         self.scrollArea_2 = QtWidgets.QScrollArea(self.centralwidget)
         self.scrollArea_2.setMinimumSize(QtCore.QSize(640, 279))
@@ -305,7 +304,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Vagon Plaka Takip"))
-        self.ComboBoxCameras.setItemText(0, _translate("MainWindow", "Kamera-1"))
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Okunan Plaka"))
         item = self.tableWidget_2.horizontalHeaderItem(1)

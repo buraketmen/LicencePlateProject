@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UpdateCamera.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,11 +12,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(1114, 781)
-        Dialog.setMinimumSize(QtCore.QSize(1114, 781))
-        Dialog.setMaximumSize(QtCore.QSize(1114, 781))
+        Dialog.resize(1117, 816)
+        Dialog.setMinimumSize(QtCore.QSize(1117, 816))
+        Dialog.setMaximumSize(QtCore.QSize(1117, 816))
         self.buttonSaveConfiguration = QtWidgets.QPushButton(Dialog)
-        self.buttonSaveConfiguration.setGeometry(QtCore.QRect(770, 720, 300, 51))
+        self.buttonSaveConfiguration.setGeometry(QtCore.QRect(760, 750, 300, 51))
         self.buttonSaveConfiguration.setMinimumSize(QtCore.QSize(261, 51))
         self.buttonSaveConfiguration.setMaximumSize(QtCore.QSize(300, 51))
         font = QtGui.QFont()
@@ -675,6 +675,47 @@ class Ui_Dialog(object):
         self.labelCameraInfo.setFont(font)
         self.labelCameraInfo.setObjectName("labelCameraInfo")
         self.horizontalLayout.addWidget(self.labelCameraInfo)
+        self.widget = QtWidgets.QWidget(Dialog)
+        self.widget.setGeometry(QtCore.QRect(740, 710, 351, 26))
+        self.widget.setObjectName("widget")
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget)
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.labelCameraStatus = QtWidgets.QLabel(self.widget)
+        font = QtGui.QFont()
+        font.setFamily("Calibri")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.labelCameraStatus.setFont(font)
+        self.labelCameraStatus.setObjectName("labelCameraStatus")
+        self.horizontalLayout_4.addWidget(self.labelCameraStatus)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setSpacing(0)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.radioButtonWorking = QtWidgets.QRadioButton(self.widget)
+        self.radioButtonWorking.setMinimumSize(QtCore.QSize(115, 22))
+        self.radioButtonWorking.setMaximumSize(QtCore.QSize(115, 22))
+        font = QtGui.QFont()
+        font.setFamily("Calibri")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.radioButtonWorking.setFont(font)
+        self.radioButtonWorking.setObjectName("radioButtonWorking")
+        self.horizontalLayout_3.addWidget(self.radioButtonWorking)
+        self.radioButtonNotWorking = QtWidgets.QRadioButton(self.widget)
+        self.radioButtonNotWorking.setMinimumSize(QtCore.QSize(114, 22))
+        self.radioButtonNotWorking.setMaximumSize(QtCore.QSize(114, 22))
+        font = QtGui.QFont()
+        font.setFamily("Calibri")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.radioButtonNotWorking.setFont(font)
+        self.radioButtonNotWorking.setObjectName("radioButtonNotWorking")
+        self.horizontalLayout_3.addWidget(self.radioButtonNotWorking)
+        self.horizontalLayout_4.addLayout(self.horizontalLayout_3)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -711,5 +752,8 @@ class Ui_Dialog(object):
         self.radioButtonHttp.setText(_translate("Dialog", "HTTP"))
         self.labelCameraOptions.setText(_translate("Dialog", "KAMERA AYARI"))
         self.labelCameraInfo.setText(_translate("Dialog", "KAMERA BİLGİLERİ"))
+        self.labelCameraStatus.setText(_translate("Dialog", "Kamera Durumu"))
+        self.radioButtonWorking.setText(_translate("Dialog", "Çalışıyor"))
+        self.radioButtonNotWorking.setText(_translate("Dialog", "Çalışmıyor"))
 
 

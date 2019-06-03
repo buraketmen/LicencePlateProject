@@ -43,7 +43,8 @@ def setDatabase():
                 TopYOne TEXT,
                 TopYTwo TEXT,
                 BottomYOne TEXT,
-                BottomYTwo TEXT)
+                BottomYTwo TEXT,
+                CameraStatus TEXT)
                 """)
     curs.execute("""
                 CREATE TABLE IF NOT EXISTS Fonts(

@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1114</width>
-    <height>781</height>
+    <width>1117</width>
+    <height>816</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>1114</width>
-    <height>781</height>
+    <width>1117</width>
+    <height>816</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>1114</width>
-    <height>781</height>
+    <width>1117</width>
+    <height>816</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -28,8 +28,8 @@
   <widget class="QPushButton" name="buttonSaveConfiguration">
    <property name="geometry">
     <rect>
-     <x>770</x>
-     <y>720</y>
+     <x>760</x>
+     <y>750</y>
      <width>300</width>
      <height>51</height>
     </rect>
@@ -1403,6 +1403,94 @@
        <string>KAMERA BİLGİLERİ</string>
       </property>
      </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>740</x>
+     <y>710</y>
+     <width>351</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <item>
+     <widget class="QLabel" name="labelCameraStatus">
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Kamera Durumu</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QRadioButton" name="radioButtonWorking">
+        <property name="minimumSize">
+         <size>
+          <width>115</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>115</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Çalışıyor</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButtonNotWorking">
+        <property name="minimumSize">
+         <size>
+          <width>114</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>114</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Çalışmıyor</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

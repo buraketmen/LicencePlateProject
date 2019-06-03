@@ -12,56 +12,28 @@ SCALAR_WHITE = (255.0, 255.0, 255.0)
 SCALAR_YELLOW = (0.0, 255.0, 255.0)
 SCALAR_GREEN = (0.0, 255.0, 0.0)
 SCALAR_RED = (0.0, 0.0, 255.0)
-
 #checkIfPossibleChar için sabitler, bu yalnızca olası bir karakteri kontrol eder (başka bir karakterle karşılaştırılmaz)
 MIN_PIXEL_WIDTH = 2
 MIN_PIXEL_HEIGHT = 8
 MIN_PIXEL_AREA = 60
 MIN_ASPECT_RATIO = 0.25
 MAX_ASPECT_RATIO = 1.00
-
 # İki karakterin karşılaştırılması için sabitler
 MIN_DIAG_SIZE_MULTIPLE_AWAY = 0.3
 MAX_DIAG_SIZE_MULTIPLE_AWAY = 8.0
 #MAX_DIAG_SIZE_MULTIPLE_AWAY = 5.0 en iyisi
-
 MAX_CHANGE_IN_AREA = 0.5
 MAX_CHANGE_IN_WIDTH = 0.8
 MAX_CHANGE_IN_HEIGHT = 0.2
 MAX_ANGLE_BETWEEN_CHARS = 12.0
 #MAX_ANGLE_BETWEEN_CHARS = 10.0 #en iyisi, 12 yapılabilir
-
 # Diğer sabitlemeler
 MIN_NUMBER_OF_MATCHING_CHARS =8
-
 RESIZED_CHAR_IMAGE_WIDTH = 20
 RESIZED_CHAR_IMAGE_HEIGHT = 30
-
 MIN_CONTOUR_AREA = 100
 
-def infoFromDatabase():
-    conn = sqlite3.connect('PlateDetectionDB.db')
-    curs = conn.cursor()
-    content = 'SELECT * FROM Cameras'
-    res = conn.execute(content)
-    for row in enumerate(res):
-        if row[0] == self.tableWidget.currentRow():
-            data = row[1]
-            minPixelWidth = data[7]
-            minPixelHeight = data[8]
-            minPixelArea = data[9]
-            minPixelRatio = data[10]
-            maxPixelRatio = data[11]
-            minDiagSize = data[12]
-            maxDiagSize = data[13]
-            maxChangeInArea = data[14]
-            maxChangeInWidth = data[15]
-            maxChangeInHeight = data[16]
-            maxAngleBetweenChar = data[17]
-            minNumberOfMatchCharNumber = data[18]
-
 def loadKNNDataAndTrainKNN():
-    #os.makedirs("./Font/deneme/")
     allContoursWithData = []                # Boş liste tanımlama
     validContoursWithData = []              # Boş liste tanımalama
     try:
@@ -75,7 +47,38 @@ def loadKNNDataAndTrainKNN():
 
     return True  #Eğer buraya gelirsek eğitim başarılı olmuştur
 
-def detectCharsInPlates(listOfPossiblePlates,type):
+def infoFromDatabase(cameraName):
+    conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
+    curs = conn.cursor()
+    searchall = curs.execute("""SELECT MinPixelWidth ,
+                MinPixelHeight ,
+                MinPixelArea ,
+                MinPixelRatio ,
+                MaxPixelRatio ,
+                MinDiagSize ,
+                MaxDiagSize ,
+                MaxChangeInArea ,
+                MaxChangeInWidth ,
+                MaxChangeInHeight ,
+                MaxAngleBetweenChar ,
+                MinNumberOfMatchCharNumber FROM Cameras WHERE CameraName = ? """, (cameraName,))
+    rows = searchall.fetchall()
+    for row in rows:
+        MIN_PIXEL_WIDTH = int(row[0])
+        MIN_PIXEL_HEIGHT = int(row[1])
+        MIN_PIXEL_AREA = int(row[2])
+        MIN_ASPECT_RATIO = float(row[3])
+        MAX_ASPECT_RATIO = float(row[4])
+        MIN_DIAG_SIZE_MULTIPLE_AWAY = float(row[5])
+        MAX_DIAG_SIZE_MULTIPLE_AWAY = float(row[6])
+        MAX_CHANGE_IN_AREA = float(row[7])
+        MAX_CHANGE_IN_WIDTH = float(row[8])
+        MAX_CHANGE_IN_HEIGHT = float(row[9])
+        MAX_ANGLE_BETWEEN_CHARS = float(row[10])
+        MIN_NUMBER_OF_MATCHING_CHARS = int(row[11])
+
+def detectCharsInPlates(listOfPossiblePlates,type,cameraName):
+    infoFromDatabase(cameraName)
     intPlateCounter = 0
     imgContours = None
     contours = []

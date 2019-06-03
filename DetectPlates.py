@@ -21,7 +21,6 @@ def detectPlatesInScene(imgOriginalScene,type):
     imgGrayscaleScene = np.zeros((height, width, 1), np.uint8) #matris olusturma
     imgThreshScene = np.zeros((height, width, 1), np.uint8)
     imgContours = np.zeros((height, width, 3), np.uint8)
-    cv2.destroyAllWindows()
     imgGrayscaleScene, imgThreshScene = Preprocess.preprocess(imgOriginalScene,type)  # Gri tonlamalı ve eşikli görüntüler elde etmek için ön işlem
     # Sahnedeki tüm olası karakterleri bul
     # Bu işlev ilk önce tüm konturları bulur, ardından sadece karakter olabilecek kontürleri içerir (henüz diğer karakterlerle karşılaştırılmadan)

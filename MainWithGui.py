@@ -12,6 +12,7 @@ import PossiblePlate
 import Database
 import datetime
 import shutil
+import urllib
 from Interfaces.Cameras import Ui_Dialog
 import Interfaces.Fonts as Fonts
 import Interfaces.AddCamera as AddCamera
@@ -20,19 +21,24 @@ import Interfaces.UpdateCamera as UpdateCamera
 import Interfaces.Char as Char
 from Interfaces.GUI import Ui_MainWindow
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, Qt, QRegExp
-from PyQt5.QtGui import QImage, QPixmap, QRegExpValidator
+from PyQt5.QtGui import QImage, QPixmap, QRegExpValidator, QIcon
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QTableWidgetItem,QTableWidgetItem, QFileDialog, QWidget
 import sqlite3
+import DetectPlateThread
+import threading
+import time
 
 locale.setlocale(locale.LC_ALL, '')
-conn = sqlite3.connect('PlateDetectionDB.db')
+conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
 curs = conn.cursor()
 path = os.getcwd() + "/"
 path = str(path)
 
+####hatalı, timeout durumu çözülmeli######
 def Screenshot(ip):
-    capture = VideoStream(src=str(ip))
     try:
+        frameSize = (640,480)
+        capture = VideoStream(src=str(ip), resolution=frameSize)
         frame = capture.read()
         return frame
     except:
@@ -52,16 +58,20 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.checkTop = 0
         self.txtClass = None
         self.checkPlateBottom = None
+        self.listCamera = []
         self.checkBottom = 0
-        try:
-            self.backimage= cv2.imread(path + '/Fonts/background.png')
-        except:
-            pass
+        self.backimage= cv2.imread(path + '/Fonts/background.png')
+
         self.InitUi()
+        self.UpdateStatusBar()
 
     def InitUi(self):
         self.show()
         Database.setDatabase()
+        comboboxThread = threading.Thread(target=self.FillComboBox)
+        comboboxThread.daemon = True
+        comboboxThread.start()
+        self.LoadDatabase()
         self.startButton.clicked.connect(self.StartWebcam)
         self.startButton.setEnabled(True)
         self.stopButton.clicked.connect(self.StopWebcam)
@@ -73,11 +83,39 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.plateEnabled = False
         self.trainButton.clicked.connect(self.TrainPlates)
         self.plateTrain =False
-        
         self.actionCameras.triggered.connect(self.ShowCamerasPage)
         self.actionAddCamera.triggered.connect(self.ShowAddCameraPage)
         self.actionFonts.triggered.connect(self.ShowFontsPage)
         self.actionAddFont.triggered.connect(self.ShowAddFont)
+
+    def UpdateStatusBar(self):
+        self.statusbar.show()
+        self.statusbar.showMessage("Program kullanılmaya hazır.")
+        self.startButton.setStatusTip("Kameraları başlatmak için tıkla.")
+        self.stopButton.setStatusTip("Kamerayı durdurmak için tıkla.")
+        self.trainButton.setStatusTip("Plaka tanıma için gerekli algoritmayı sisteme yükler.")
+        self.detectButton.setStatusTip("Plaka tanımayı başlatmak için tıkla. Aktif hale gelmesi için KNN taraması yapılmalı.")
+        self.tableWidget.setStatusTip("Kameralarda görünen ve veritabanına kaydedilen plakalar yer alır.")
+        self.tableWidget_2.setStatusTip("Listeden seçilen kamerada okunan tüm veriler yer alır.")
+        self.ComboBoxCameras.setStatusTip("Sistemde var olan ve çalışır durumdaki kameralar yer alır.")
+
+
+
+    def FillComboBox(self):
+        cameraStatus = "Çalışıyor"
+        while True:
+            listofCameras= []
+            searchall = curs.execute('SELECT CameraName FROM Cameras WHERE CameraStatus = ? ', (cameraStatus,))
+            self.ComboBoxCameras.clear()
+            rows = searchall.fetchall()
+            if(len(rows)!=0):
+                for row in rows:
+                    listofCameras.append(row[0])
+                self.ComboBoxCameras.addItems(listofCameras)
+                if(self.listCamera!=listofCameras):
+                    del self.listCamera
+                    self.listCamera = listofCameras.copy()
+            time.sleep(10)
         
     def ShowCamerasPage(self):
         self.cameraPage = Cameras()
@@ -140,30 +178,31 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                                 QMessageBox.Ok, QMessageBox.Ok)
 
     def DetectWebcam(self, status):
+        txtfile = open("ThreadStatus.txt", "w")
         if status:
+            txtfile.write("True")
+            cameraStatus = "Çalışmıyor"
             self.detectButton.setText('Plaka Tanımayı Durdur')
             self.plateEnabled = True
+            if(len(self.listCamera)!=0):
+                for cameraName in self.listCamera:
+                    DetectPlateThread.camThread(cameraName).start()
         else:
+            print(threading.activeCount())
+            txtfile.write("False")
             self.detectButton.setText('Plaka Tanimayi Baslat')
             self.plateEnabled = False
 
     def StartWebcam(self):
-        try:
-            # self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
-            #'rtsp://root:root@192.168.10.34/axis-media/media.amp'
-            #self.capture = cv2.VideoCapture(0)
-            self.capture = VideoStream(src='rtsp://root:root@192.168.10.34/axis-media/media.amp') #imutils
-            #self.capture2 = VideoStream(src='rtsp://root:root@192.168.10.49/axis-media/media.amp')
-
-            self.capture.start() #imutils
-            #self.capture2.start()
-            frame = self.capture.read() #kontrol
-        except:
-            self.startButton.setEnabled(False)
-            QMessageBox.warning(self, 'Kamera Hatasi!',
-                                "Sistemde herhangi bir kamera bulunamadi.\n",
-                                QMessageBox.Ok, QMessageBox.Ok)
-        if(self.capture!=None):
+        frameSize = (640, 480)
+        # self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
+        # self.capture = cv2.VideoCapture(0)
+        # self.capture = VideoStream(src='rtsp://root:root@192.168.10.34/axis-media/media.amp')
+        self.capture = VideoStream(src=0, resolution = frameSize)
+        # self.capture2 = VideoStream(src='rtsp://root:root@192.168.10.49/axis-media/media.amp')
+        frame = self.capture.read()
+        if(str(frame)!= "None"):
+            self.capture.start()
             self.cameraStatus=True
             self.startButton.setEnabled(False)
             self.stopButton.setEnabled(True)
@@ -173,8 +212,13 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.UpdateFrame)
             self.timer.start(1)
-
             self.statusbar.showMessage('Kamera baslatildi.')
+        else:
+            self.DisplayImage(self.backimage)
+            self.startButton.setEnabled(True)
+            QMessageBox.warning(self, 'Kamera Hatasi!',
+                                "Sistemde herhangi bir kamera bulunamadi.\n",
+                                QMessageBox.Ok, QMessageBox.Ok)
 
     def StopWebcam(self):
         self.cameraStatus=False
@@ -182,6 +226,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.plateEnabled= False
             self.detectButton.toggle()
             self.detectButton.setText('Plaka Tanimayi Baslat')
+        self.capture.stream.stream.release()
         self.timer.stop()
         self.DisplayImage(self.backimage)
         self.startButton.setEnabled(True)
@@ -206,76 +251,8 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
     def UpdateFrame(self):
         self.image = self.capture.read()
         if (self.plateEnabled):
-            detectedImage = self.DetectPlate(self.image)
-            self.DisplayImage(detectedImage)
-        else:
-            self.DisplayImage(self.image)
-
-    def DetectPlate(self, img):
-        imgtop = self.image[0:240, 0:640]
-        imgbottom = self.image[240:480, 0:640]
-        cv2.rectangle(img, (10, 10), (630, 240), (0, 255, 0), 1)
-        cv2.rectangle(img, (10, 250), (630, 470), (0, 0, 255), 1)
-
-        listOfPossiblePlatesTop = DetectPlates.detectPlatesInScene(imgtop,2)  # Plakaları tespit et
-        listOfPossiblePlatesTop = DetectChars.detectCharsInPlates(listOfPossiblePlatesTop,2)  # Plaka içindeki karakterleri tespit et
-
-        listOfPossiblePlatesBottom = DetectPlates.detectPlatesInScene(imgbottom, 1)  # Plakaları tespit et
-        listOfPossiblePlatesBottom = DetectChars.detectCharsInPlates(listOfPossiblePlatesBottom,1)  # Plaka içindeki karakterleri tespit et
-        if (len(listOfPossiblePlatesTop) != 0):
-            # Eğer program buraya geldiyse en azından bir plaka okunmuştur
-            # Olası plakaların listesini DESCENDING sıralamasına göre sırala (Çok karakterden az karaktere)
-            listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
-            licPlateTop = listOfPossiblePlatesTop[0]
-            if(len(licPlateTop.strChars)>4):
-                print(licPlateTop.strChars)
-            if (len(licPlateTop.strChars) == 8):
-                if (self.checkPlateTop == licPlateTop.strChars):
-                    self.checkTop += 1
-                else:
-                    self.checkTop = 0
-                if (self.checkTop == 5):
-                    self.Add2Database(licPlateTop.strChars, licPlateTop.imgPlate, licPlateTop.imgThresh, imgtop)
-                self.checkPlateTop = licPlateTop.strChars
-            if (len(listOfPossiblePlatesBottom) != 0):
-                listOfPossiblePlatesBottom.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
-                # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
-                licPlateBottom = listOfPossiblePlatesBottom[0]
-                if (len(licPlateBottom.strChars) > 10):
-                    print(licPlateBottom.strChars)
-                if (len(licPlateBottom.strChars) == 12):
-                    if (self.checkPlateBottom == licPlateBottom.strChars):
-                        self.checkBottom += 1
-                    else:
-                        self.checkBottom = 0
-                    if (self.checkBottom == 5):
-                        self.Add2Database(licPlateBottom.strChars, licPlateBottom.imgPlate,
-                                          licPlateBottom.imgThresh, imgbottom)
-                    self.checkPlateBottom = licPlateBottom.strChars
-        return img
-
-    def Add2Database(self,plate,imgPlate,imgThresh,img):
-        an = datetime.datetime.now()
-        second = int(an.second)
-        hour = int(an.hour)
-        date = str(an.day) + "." + str(an.month) + "." + str(an.year)
-        time = str(an.hour) + "." + str(an.minute) + "." + str(an.second)
-        searchall = curs.execute('SELECT Plate FROM Plates WHERE Plate = ? AND Date =?', (plate,date,))
-        rows = searchall.fetchall()
-        i=0
-        if(rows!=None):
-            for row in rows:
-                i=i+1
-        if(i==0):
-            try:
-                #cv2.imwrite("./PlatePhotos/Original_{}_{}_{}.png".format(plate,date,time),imgPlate)  # Kırpılan plakayı ve işlenmiş halini kaydet
-                cv2.imwrite(path + "PlatePhotos/Thresh_{}_{}_{}.png".format(plate,date,time), imgThresh)
-            except:
-                pass
-            curs.execute("INSERT INTO Plates (Plate,Date,Time) VALUES(?,?,?)",
-                         (plate, date, time))
-            conn.commit()
             self.LoadDatabase()
+        self.DisplayImage(self.image)
 
     def StartRecording(self):
         MIN_CONTOUR_AREA = 100
@@ -393,6 +370,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         maxChangeInHeight = Database.MAX_CHANGE_IN_HEIGHT
         maxAngleBetweenChar = Database.MAX_ANGLE_BETWEEN_CHARS
         minNumberOfMatchCharNumber = Database.MIN_NUMBER_OF_MATCHING_CHARS
+        cameraStatus = "Çalışmıyor"
         topYOne = 0
         topYTwo = 240
         bottomYOne = 240
@@ -405,13 +383,15 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     protocolType = "rtsp"
                 if (self.addCameraPage.radioButtonHttp.isChecked() == True):
                     protocolType = "http"
-
-                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,TopYOne,TopYTwo,BottomYOne,BottomYTwo) 
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, 
+                ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,
+                MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,
+                TopYOne,TopYTwo,BottomYOne,BottomYTwo,CameraStatus) 
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
                 cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight,
                 minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth,
                 maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne,
-                bottomYTwo))
+                bottomYTwo, cameraStatus))
                 conn.commit()
                 protocolType = "rtsp"
                 self.addCameraPage.close()
@@ -474,6 +454,10 @@ class Cameras(QDialog,Ui_Dialog):
     def __init__(self,parent=None):
         super(Cameras,self).__init__(parent)
         self.setupUi(self)
+        try:
+            self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
+        except Exception:
+            pass
         self.setWindowTitle('Kameralar')
         self.LoadCameraDatabase()
         self.InitUi()
@@ -565,6 +549,7 @@ class Cameras(QDialog,Ui_Dialog):
         maxChangeInHeight = Database.MAX_CHANGE_IN_HEIGHT
         maxAngleBetweenChar = Database.MAX_ANGLE_BETWEEN_CHARS
         minNumberOfMatchCharNumber = Database.MIN_NUMBER_OF_MATCHING_CHARS
+        cameraStatus = "Çalışmıyor"
         topYOne = 0
         topYTwo = 240
         bottomYOne = 240
@@ -577,13 +562,17 @@ class Cameras(QDialog,Ui_Dialog):
                     protocolType = "rtsp"
                 if (self.addCameraPage.radioButtonHttp.isChecked() == True):
                     protocolType = "http"
-
-                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,TopYOne,TopYTwo,BottomYOne,BottomYTwo) 
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
-                cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight,
-                minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth,
-                maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne,
-                bottomYTwo))
+                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, 
+                                ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,
+                                MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,
+                                TopYOne,TopYTwo,BottomYOne,BottomYTwo,CameraStatus) 
+                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                    cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth,
+                    minPixelHeight,
+                    minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea,
+                    maxChangeInWidth,
+                    maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne,
+                    bottomYTwo, cameraStatus))
                 conn.commit()
                 self.LoadCameraDatabase()
                 protocolType = "rtsp"
@@ -691,6 +680,7 @@ class Cameras(QDialog,Ui_Dialog):
                 topYTwo = data[20]
                 bottomYOne = data[21]
                 bottomYTwo = data[22]
+                cameraStatus = data[23]
                 self.updateCameraPage.editCameraName.setText(str(cameraName))
                 self.updateCameraPage.editCameraIP.setText(str(cameraIP))
                 self.updateCameraPage.editCameraIPAddition.setText(str(cameraIPAddition))
@@ -716,6 +706,10 @@ class Cameras(QDialog,Ui_Dialog):
                     self.updateCameraPage.radioButtonRtsp.setChecked(True)
                 if(protocolType=="http"):
                     self.updateCameraPage.radioButtonHttp.setChecked(True)
+                if(cameraStatus=="Çalışıyor"):
+                    self.updateCameraPage.radioButtonWorking.setChecked(True)
+                if(cameraStatus=="Çalışmıyor"):
+                    self.updateCameraPage.radioButtonNotWorking.setChecked(True)
                 if(username!="" and password!=""):
                     ip = str(protocolType)+"://"+str(username)+":"+str(password)+"@"+ str(cameraIP)+"/"+cameraIPAddition
                 else:
@@ -746,10 +740,15 @@ class Cameras(QDialog,Ui_Dialog):
         bottomYTwo = self.updateCameraPage.editBottomY2.text()
         topYOne, topYTwo, bottomYOne, bottomYTwo = self.CounterSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
         protocolType = "rtsp"
+        cameraStatus = "Çalışmıyor"
         if(self.updateCameraPage.radioButtonRtsp.isChecked()==True):
             protocolType = "rtsp"
         if(self.updateCameraPage.radioButtonHttp.isChecked()==True):
             protocolType = "http"
+        if(self.updateCameraPage.radioButtonWorking.isChecked()==True):
+            cameraStatus = "Çalışıyor"
+        if(self.updateCameraPage.radioButtonNotWorking.isChecked()==True):
+            cameraStatus = "Çalışmıyor"
         search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
         searchTwo = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName.lower(),))
         results = search.fetchone()
@@ -759,8 +758,8 @@ class Cameras(QDialog,Ui_Dialog):
                 ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
                 MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
                 MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , MinNumberOfMatchCharNumber = ? , TopYOne = ? , 
-                TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? WHERE CameraName = ?""",
-                (cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, self.oldCameraName))
+                TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? , CameraStatus = ? WHERE CameraName = ?""",
+                (cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus, self.oldCameraName))
             conn.commit()
             self.LoadCameraDatabase()
             self.updateCameraPage.close()
@@ -773,11 +772,11 @@ class Cameras(QDialog,Ui_Dialog):
                                 ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
                                 MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
                                 MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , MinNumberOfMatchCharNumber = ? , TopYOne = ? , 
-                                TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? WHERE CameraName = ?""",
+                                TopYTwo = ? , BottomYOne = ? , BottomYTwo = ?, CameraStatus = ? WHERE CameraName = ?""",
                              (cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth,
                               minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize,
                               maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
-                              minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, self.oldCameraName))
+                              minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus, self.oldCameraName))
                 conn.commit()
                 self.LoadCameraDatabase()
                 self.updateCameraPage.close()
@@ -817,7 +816,6 @@ class Cameras(QDialog,Ui_Dialog):
                 if buttonReply == QMessageBox.Yes:
                     curs.execute("DELETE FROM Cameras WHERE CameraName=?", (cameraName,))
                     conn.commit()
-
                     self.LoadCameraDatabase()
                 else:
                     self.LoadCameraDatabase()
@@ -826,7 +824,9 @@ class Cameras(QDialog,Ui_Dialog):
     def LoadCameraDatabase(self):
         while self.tableWidget.rowCount() > 0:
             self.tableWidget.removeRow(0)
-        content = 'SELECT CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber FROM Cameras'
+        content = """SELECT CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,
+        MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,
+        MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,CameraStatus FROM Cameras"""
         res = conn.execute(content)
         for row_index, row_data in enumerate(res):
             self.tableWidget.insertRow(row_index)
@@ -844,6 +844,10 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
     def __init__(self,parent=None):
         super(Fonts,self).__init__(parent)
         self.setupUi(self)
+        try:
+            self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
+        except Exception:
+            pass
         self.setWindowTitle('Fontlar')
         self.InitUi()
 
@@ -901,6 +905,10 @@ class AddFont(QDialog,AddFont.Ui_Dialog):
     def __init__(self,parent=None):
         super(AddFont,self).__init__(parent)
         self.setupUi(self)
+        try:
+            self.setWindowIcon(QIcon(str(path) + "/vagonplaka.png"))
+        except Exception:
+            pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Font Ekle')
 
@@ -909,6 +917,10 @@ class AddCamera(QDialog,AddCamera.Ui_Dialog):
     def __init__(self,parent=None):
         super(AddCamera,self).__init__(parent)
         self.setupUi(self)
+        try:
+            self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
+        except Exception:
+            pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Kamera Ekle')
 
@@ -917,6 +929,10 @@ class UpdateCamera(QDialog,UpdateCamera.Ui_Dialog):
     def __init__(self,parent=None):
         super(UpdateCamera,self).__init__(parent)
         self.setupUi(self)
+        try:
+            self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
+        except Exception:
+            pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Kamera Bilgilerini Güncelle')
 
@@ -925,12 +941,85 @@ class Char(QDialog,Char.Ui_Dialog):
     def __init__(self,parent=None):
         super(Char,self).__init__(parent)
         self.setupUi(self)
+        try:
+            self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
+        except Exception:
+            pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Harf Giriş Ekranı')
 
 def main():
     app = QApplication([])
     win = MainWithGui()
+    try:
+        win.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
+    except Exception:
+        pass
     app.exec_()
 
 main()
+
+"""    def DetectPlate(self):
+        imgtop = self.image[0:240, 0:640]
+        imgbottom = self.image[240:480, 0:640]
+
+        listOfPossiblePlatesBottom = DetectPlates.detectPlatesInScene(imgbottom, 1)
+        listOfPossiblePlatesBottom = DetectChars.detectCharsInPlates(listOfPossiblePlatesBottom,1)
+
+        listOfPossiblePlatesTop = DetectPlates.detectPlatesInScene(imgtop,2)  # Plakaları tespit et
+        listOfPossiblePlatesTop = DetectChars.detectCharsInPlates(listOfPossiblePlatesTop,2)  # Plaka içindeki karakterleri tespit et
+
+
+        if (len(listOfPossiblePlatesTop) != 0):
+            # Eğer program buraya geldiyse en azından bir plaka okunmuştur
+            # Olası plakaların listesini DESCENDING sıralamasına göre sırala (Çok karakterden az karaktere)
+            listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
+            licPlateTop = listOfPossiblePlatesTop[0]
+            if(len(licPlateTop.strChars)>4):
+                print(licPlateTop.strChars)
+            if (len(licPlateTop.strChars) == 8):
+                if (self.checkPlateTop == licPlateTop.strChars):
+                    self.checkTop += 1
+                else:
+                    self.checkTop = 0
+                if (self.checkTop == 5):
+                    self.Add2Database(licPlateTop.strChars, licPlateTop.imgPlate, licPlateTop.imgThresh, imgtop)
+                self.checkPlateTop = licPlateTop.strChars
+            if (len(listOfPossiblePlatesBottom) != 0):
+                listOfPossiblePlatesBottom.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
+                # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
+                licPlateBottom = listOfPossiblePlatesBottom[0]
+                if (len(licPlateBottom.strChars) > 1):
+                    print(licPlateBottom.strChars)
+                if (len(licPlateBottom.strChars) == 12):
+                    if (self.checkPlateBottom == licPlateBottom.strChars):
+                        self.checkBottom += 1
+                    else:
+                        self.checkBottom = 0
+                    if (self.checkBottom == 5):
+                        self.Add2Database(licPlateBottom.strChars, licPlateBottom.imgPlate,
+                                          licPlateBottom.imgThresh, imgbottom)
+                    self.checkPlateBottom = licPlateBottom.strChars
+
+    def Add2Database(self,plate,imgPlate,imgThresh,img):
+        an = datetime.datetime.now()
+        second = int(an.second)
+        hour = int(an.hour)
+        date = str(an.day) + "." + str(an.month) + "." + str(an.year)
+        time = str(an.hour) + "." + str(an.minute) + "." + str(an.second)
+        searchall = curs.execute('SELECT Plate FROM Plates WHERE Plate = ? AND Date =?', (plate,date,))
+        rows = searchall.fetchall()
+        i=0
+        if(rows!=None):
+            for row in rows:
+                i=i+1
+        if(i==0):
+            try:
+                #cv2.imwrite("./PlatePhotos/Original_{}_{}_{}.png".format(plate,date,time),imgPlate)  # Kırpılan plakayı ve işlenmiş halini kaydet
+                cv2.imwrite(path + "PlatePhotos/Thresh_{}_{}_{}.png".format(plate,date,time), imgThresh)
+            except:
+                pass
+            curs.execute("INSERT INTO Plates (Plate,Date,Time) VALUES(?,?,?)",
+                         (plate, date, time))
+            conn.commit()
+            self.LoadDatabase()"""

@@ -310,6 +310,11 @@
            <string>Minimum Eşleşecek Karakter</string>
           </property>
          </column>
+         <column>
+          <property name="text">
+           <string>Kamera Durumu</string>
+          </property>
+         </column>
         </widget>
        </item>
       </layout>
