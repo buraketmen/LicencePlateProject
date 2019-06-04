@@ -8,25 +8,33 @@ import sqlite3
 import DetectPlates
 import cv2
 import os
+from pythonping import ping
 
 conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
 curs = conn.cursor()
 path = os.getcwd() + "\\"
 path = str(path)
 
-def GetResponse(ip):
+"""def GetResponse(ip):
     hostname = ip
-    response = os.system("ping -c 1 " + "http://" +hostname)
+    response = os.system("ping -c 1 " + hostname)
     if response == 0:
         return True
     else:
+        return False"""
+
+def GetPing(ip):
+    response = ping(ip, size=1, count=1)
+    if(str(response)[0:7]=="Request"):
         return False
+    else:
+        return True
 
 class camThread(threading.Thread):
     def __init__(self, cameraName):
         threading.Thread.__init__(self)
         self.cameraName = cameraName
-        self.frameStatus = "True"
+        self.frameStatus = True
         self.image = None
         frameSize = (640, 480)
         searchall = curs.execute("""SELECT CameraIP, CameraIPAddition, Username, Password, ProtocolType,TopYOne, TopYTwo,
@@ -46,13 +54,13 @@ class camThread(threading.Thread):
             self.ip = self.protocolType + "://" + self.username + ":" + self.password + "@" + self.cameraIP + "/" + self.cameraIPAddition
         else:
             self.ip = self.protocolType + "://" + self.cameraIP + "/" + self.cameraIPAddition
-        if (GetResponse(self.cameraIP)):
+        if (GetPing(self.cameraIP)):
             self.capture = VideoStream(src=self.ip, resolution=frameSize)
             self.image = self.capture.read()
         else:
             self.frameStatus = False
         if (self.image==None):
-            self.frameStatus = "False"
+            self.frameStatus = False
         self.stopped = False
         self.checkTop = 0
         self.checkBottom = 0
@@ -61,7 +69,7 @@ class camThread(threading.Thread):
 
     def run(self):
         while True:
-            if (self.frameStatus == "False"):
+            if (self.frameStatus == False):
                 break
             ThreadStatus = open("ThreadStatus.txt", "r")
             if (str(ThreadStatus.readline()) == "False"):

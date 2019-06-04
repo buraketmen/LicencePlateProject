@@ -27,31 +27,22 @@ import sqlite3
 import DetectPlateThread
 import threading
 import time
+from pythonping import ping
 
 locale.setlocale(locale.LC_ALL, '')
 conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
 curs = conn.cursor()
+
 path = os.getcwd() + "\\"
 path = str(path)
-print(path)
+frameSize = (640, 480)
 
-image = None
-
-def GetResponse(ip):
-    hostname = ip
-    response = os.system("ping -c 1 " + "http://"+hostname)
-    if response == 0:
-        return True
-    else:
+def GetPing(ip):
+    response = ping(ip, size=1, count=1)
+    if(str(response)[0:7]=="Request"):
         return False
-
-def Screenshot(ip):
-    global ret, image
-    frameSize = (640, 480)
-    capture = VideoStream(src=str(ip), resolution=frameSize).start()
-    image = capture.read()
-    capture.stream.stream.release()
-
+    else:
+        return True
 
 ##############################################################################################
 class MainWithGui(QMainWindow,Ui_MainWindow):
@@ -80,7 +71,6 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         comboboxThread = threading.Thread(target=self.FillComboBox)
         comboboxThread.daemon = True
         comboboxThread.start()
-
         self.LoadDatabase()
         self.startButton.clicked.connect(self.StartWebcam)
         self.startButton.setEnabled(True)
@@ -182,7 +172,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                 self.LoadPhoto(self.fname)
         except Exception as error:
             self.fontPhoto = None
-            QMessageBox.warning(self, 'Fotograf Uzanti Hatasi',
+            QMessageBox.warning(self.addFontPage, 'Fotograf Uzanti Hatasi',
                                 "Fotoğraf uzantısını değistirerek tekrar deneyiniz!",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
@@ -192,9 +182,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         if status:
             txtfile.write("True")
             txtfile.close()
-            cameraStatus = "Çalışmıyor"
             self.detectButton.setText('Plaka Tanımayı Durdur')
-
             self.plateEnabled = True
             if(len(self.listCamera)!=0):
                 for cameraName in self.listCamera:
@@ -203,6 +191,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     t.start()
         else:
             txtfile.write("False")
+            txtfile.close()
             self.detectButton.setText('Plaka Tanimayi Baslat')
             self.trainButton.setEnabled(True)
             self.plateEnabled = False
@@ -225,27 +214,34 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                 ip = protocolType + "://" + username + ":" + password + "@" + cameraIP + "/" + cameraIPAddition
             else:
                 ip = protocolType + "://" + cameraIP + "/" + cameraIPAddition
-            return ip
+            return ip, cameraIP
 
     def StartWebcam(self):
+        global Res
         # self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
         # self.capture2 = VideoStream(src='rtsp://root:root@192.168.10.49/axis-media/media.amp')
-        self.ComboBoxCameras.setEnabled(False)
-        self.cameraStatus = True
-        ip = self.getIP()
-        camera = threading.Thread(target=self.StartIPCamera, args=(ip,))
-        camera.daemon = True
-        camera.start()
+        ip, cameraIP = self.getIP()
+        if(GetPing(cameraIP)):
+            self.cameraStatus = True
+            self.ComboBoxCameras.setEnabled(False)
+            camera = threading.Thread(target=self.StartIPCamera, args=(ip,))
+            camera.daemon = True
+            camera.start()
+        else:
+            QMessageBox.warning(self, 'Kamera Hatası',
+                                "Kameraya ulaşılamadı. Lütfen kamera bilgilerini kontrol ediniz!\n",
+                                QMessageBox.Ok, QMessageBox.Ok)
+
 
     def StartIPCamera(self, ip):
-        frameSize = (640, 480)
+        global frameSize
         self.startButton.setEnabled(False)
         self.stopButton.setEnabled(True)
         self.capture = VideoStream(src=ip, resolution=frameSize)
         self.capture.start()
         while self.cameraStatus == True:
             self.image = self.capture.read()
-            if(self.image !=None):
+            if (self.image != None):
                 if (len(self.image) != 0):
                     self.DisplayImage(self.image)
                 else:
@@ -255,6 +251,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.capture.stream.stream.release()
         self.DisplayImage(self.backimage)
         self.startButton.setEnabled(True)
+
 
     def StopWebcam(self):
         self.cameraStatus=False
@@ -314,7 +311,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     intChar = self.char
                     if intChar == None:  #ESC
                         Check = False
-                        QMessageBox.warning(self, 'Çıkış',
+                        QMessageBox.warning(self.addFontPage, 'Çıkış',
                                             "İşlem iptal edildi!",
                                             QMessageBox.Ok, QMessageBox.Ok)
                         self.addFontPage.close()
@@ -346,11 +343,11 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                         np.savetxt(newpath + "flattened_images.txt", npaFlattenedImages)  #
                         self.char == None
                         self.addFontPage.close()
-                        QMessageBox.information(self, 'Kayıt Başarılı',
+                        QMessageBox.information(self.addFontPage, 'Kayıt Başarılı',
                                                 "Font için sınıflandırma ve fotoğraf dizeleri başarıyla oluşturuldu.",
                                                 QMessageBox.Ok, QMessageBox.Ok)
         else:
-            QMessageBox.warning(self, 'Font İsim Hatası',
+            QMessageBox.warning(self.addFontPage, 'Font İsim Hatası',
                                 "Lütfen font için isim giriniz!",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
@@ -363,7 +360,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         else:
             self.charPage.close()
             self.addFontPage.close()
-            QMessageBox.warning(self, 'Harf Hatasi',
+            QMessageBox.warning(self.addFontPage, 'Harf Hatasi',
                                 "Lütfen tekrar deneyiniz!",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
@@ -373,6 +370,13 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         numpyarray = np.asarray(bytes, dtype=np.uint8)
         self.fontPhoto = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
         self.DisplayPhoto(self.fontPhoto, "Font")
+
+    def CountofLetter(self,text,let):
+        count = 0
+        for letter in text:
+            if letter == let:
+                count = count + 1
+        return count
 
     def AddCamera(self):
         cameraName = self.addCameraPage.editCameraName.text()
@@ -398,9 +402,12 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         topYTwo = 240
         bottomYOne = 240
         bottomYTwo = 480
+        countDot = self.CountofLetter(cameraIP,".")
         search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
         results = search.fetchone()
-        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != ""):
+        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != "" and countDot ==3):
+            if (cameraIP[-1] == "."):
+                cameraIP = cameraIP + "0"
             if (results == None):
                 if (self.addCameraPage.radioButtonRtsp.isChecked() == True):
                     protocolType = "rtsp"
@@ -418,15 +425,15 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                 conn.commit()
                 protocolType = "rtsp"
                 self.addCameraPage.close()
-                QMessageBox.information(self, 'Kayit Basarili!',
+                QMessageBox.information(self.addCameraPage, 'Kayit Basarili!',
                                         "Kamera sisteme eklendi!\n",
                                         QMessageBox.Ok, QMessageBox.Ok)
             else:
-                QMessageBox.warning(self, 'Gecersiz Kamera İsmi!',
+                QMessageBox.warning(self.addCameraPage, 'Gecersiz Kamera İsmi!',
                                     "Eklenmek istenen kamera adı sistemde mevcut!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
-            QMessageBox.warning(self, 'Gecersiz Bilgi!',
+            QMessageBox.warning(self.addCameraPage, 'Gecersiz Bilgi!',
                                 "Eklenmek istenen bilgileri kontrol ediniz!\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
@@ -553,6 +560,13 @@ class Cameras(QDialog,Ui_Dialog):
         self.addCameraPage.editCameraIP.setValidator(validatorip)
         self.addCameraPage.exec_()
 
+    def CountofLetter(self,text,let):
+        count = 0
+        for letter in text:
+            if letter == let:
+                count = count + 1
+        return count
+
     def AddCamera(self):
         cameraName = self.addCameraPage.editCameraName.text()
         cameraIP = self.addCameraPage.editCameraIP.text()
@@ -577,9 +591,12 @@ class Cameras(QDialog,Ui_Dialog):
         topYTwo = 240
         bottomYOne = 240
         bottomYTwo = 480
+        countDot = self.CountofLetter(cameraIP, ".")
         search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
         results = search.fetchone()
-        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != ""):
+        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != "" and countDot == 3):
+            if (cameraIP[-1] == "."):
+                cameraIP = cameraIP + "0"
             if (results == None):
                 if (self.addCameraPage.radioButtonRtsp.isChecked() == True):
                     protocolType = "rtsp"
@@ -600,15 +617,15 @@ class Cameras(QDialog,Ui_Dialog):
                 self.LoadCameraDatabase()
                 protocolType = "rtsp"
                 self.addCameraPage.close()
-                QMessageBox.information(self, 'Kayit Basarili!',
+                QMessageBox.information(self.addCameraPage, 'Kayit Basarili!',
                                         "Kamera sisteme eklendi!\n",
                                         QMessageBox.Ok, QMessageBox.Ok)
             else:
-                QMessageBox.warning(self, 'Gecersiz Kamera İsmi!',
+                QMessageBox.warning(self.addCameraPage, 'Gecersiz Kamera İsmi!',
                                     "Eklenmek istenen kamera adı sistemde mevcut!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
-            QMessageBox.warning(self, 'Gecersiz Bilgi!',
+            QMessageBox.warning(self.addCameraPage, 'Gecersiz Bilgi!',
                                 "Eklenmek istenen bilgileri kontrol ediniz!\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
@@ -653,24 +670,26 @@ class Cameras(QDialog,Ui_Dialog):
         self.GetFrameFromCamera(cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo)
 
     def GetFrameFromCamera(self, cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo):
-        global image
-        if(GetResponse(cameraIP)):
-            deneme = threading.Thread(target=Screenshot, args=(ip,))
-            deneme.daemon = True
-            deneme.start()
-            if (image != None):
-                img = self.ShowCounters(image, topYOne, topYTwo, bottomYOne, bottomYTwo)
+        global frameSize
+        if(GetPing(cameraIP)):
+            capture = VideoStream(src=str(ip), resolution=frameSize)
+            capture.start()
+            screenshot = capture.read()
+            capture.stream.stream.release()
+            if (screenshot != None):
+                img = self.ShowCounters(screenshot, topYOne, topYTwo, bottomYOne, bottomYTwo)
                 self.DisplayPhoto(img)
+                screenshot = None
             else:
                 self.DisplayPhoto(self.backimage)
                 self.updateCameraPage.buttonShowCounters.setEnabled(False)
-                QMessageBox.warning(self, 'Kamera Hatası!',
+                QMessageBox.warning(self.updateCameraPage, 'Kamera Hatası!',
                                     "Ulaşılmak istenen kameraya erişim sağlanamadı. Lütfen bilgileri kontrol ediniz!\n" + "IP: " + ip + "\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.DisplayPhoto(self.backimage)
             self.updateCameraPage.buttonShowCounters.setEnabled(False)
-            QMessageBox.warning(self, 'Kamera Hatası!',
+            QMessageBox.warning(self.updateCameraPage, 'Kamera Hatası!',
                                 "Ulaşılmak istenen kameraya erişim sağlanamadı. Lütfen bilgileri kontrol ediniz!\n" + "IP: " + ip + "\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
@@ -749,7 +768,6 @@ class Cameras(QDialog,Ui_Dialog):
 
 
     def UpdateCamera(self):
-        global image
         cameraName = self.updateCameraPage.editCameraName.text()
         cameraIP = self.updateCameraPage.editCameraIP.text()
         cameraIPAddition = self.updateCameraPage.editCameraIPAddition.text()
@@ -771,62 +789,87 @@ class Cameras(QDialog,Ui_Dialog):
         topYTwo = self.updateCameraPage.editTopY2.text()
         bottomYOne = self.updateCameraPage.editBottomY1.text()
         bottomYTwo = self.updateCameraPage.editBottomY2.text()
-        topYOne, topYTwo, bottomYOne, bottomYTwo = self.CounterSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
-        protocolType = "rtsp"
-        cameraStatus = "Çalışmıyor"
-        if(self.updateCameraPage.radioButtonRtsp.isChecked()==True):
+        if(len(topYOne)!=0 and len(topYTwo)!=0 and len(bottomYOne)!=0 and len(bottomYTwo)!=0):
+            topYOne, topYTwo, bottomYOne, bottomYTwo = self.CounterSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
             protocolType = "rtsp"
-        if(self.updateCameraPage.radioButtonHttp.isChecked()==True):
-            protocolType = "http"
-        if(self.updateCameraPage.radioButtonWorking.isChecked()==True):
-            cameraStatus = "Çalışıyor"
-        if(self.updateCameraPage.radioButtonNotWorking.isChecked()==True):
             cameraStatus = "Çalışmıyor"
-        search = curs.execute('SELECT CameraName FROM Cameras')
-        check = False
-        rows = search.fetchall()
-        for row in rows:
-            if (str(row[0]).lower() == cameraName.lower()):
-                check = True
-        if(str(self.oldCameraName) == cameraName):
-            curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , Username = ? , Password = ? , 
-                ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
-                MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
-                MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , MinNumberOfMatchCharNumber = ? , TopYOne = ? , 
-                TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? , CameraStatus = ? WHERE CameraName = ?""",
-                (cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus, self.oldCameraName))
-            conn.commit()
-            image = None
-            self.LoadCameraDatabase()
-            self.updateCameraPage.close()
-            QMessageBox.information(self, 'Guncelleme Basarili!',
-                                    "Kamera konfigürasyon güncellemesi başarı ile yapıldı!",
+            if (self.updateCameraPage.radioButtonRtsp.isChecked() == True):
+                protocolType = "rtsp"
+            if (self.updateCameraPage.radioButtonHttp.isChecked() == True):
+                protocolType = "http"
+            if (self.updateCameraPage.radioButtonWorking.isChecked() == True):
+                cameraStatus = "Çalışıyor"
+            if (self.updateCameraPage.radioButtonNotWorking.isChecked() == True):
+                cameraStatus = "Çalışmıyor"
+            countDot = self.CountofLetter(cameraIP, ".")
+            search = curs.execute('SELECT CameraName FROM Cameras')
+            check = False
+            rows = search.fetchall()
+            for row in rows:
+                if (str(row[0]).lower() == cameraName.lower()):
+                    check = True
+            if (len(minPixelWidth) != 0 and len(minPixelHeight) != 0 and len(minPixelArea) != 0 and len(
+                    minPixelRatio) != 0
+                    and minDiagSize != 0 and len(maxDiagSize) != 0 and len(maxChangeInArea) != 0 and len(
+                        maxChangeInWidth) != 0
+                    and len(maxChangeInHeight) != 0 and len(maxAngleBetweenChar) != 0 and len(
+                        minNumberOfMatchCharNumber) != 0
+                    and countDot == 3 and len(cameraName) != 0):
+                if (cameraIP[-1] == "."):
+                    cameraIP = cameraIP + "0"
+                if (str(self.oldCameraName) == cameraName):
+                    curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , Username = ? , Password = ? , 
+                                        ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
+                                        MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
+                                        MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , MinNumberOfMatchCharNumber = ? , TopYOne = ? , 
+                                        TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? , CameraStatus = ? WHERE CameraName = ?""",
+                                 (cameraName, cameraIP, cameraIPAddition, username, password, protocolType,
+                                  minPixelWidth,
+                                  minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize,
+                                  maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
+                                  minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus,
+                                  self.oldCameraName))
+                    conn.commit()
+                    self.LoadCameraDatabase()
+                    QMessageBox.information(self.updateCameraPage, 'Guncelleme Basarili!',
+                                            "Kamera konfigürasyon güncellemesi başarı ile yapıldı!",
+                                            QMessageBox.Ok, QMessageBox.Ok)
+                    self.updateCameraPage.close()
+
+                else:
+                    if (check == False):
+                        curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , 
+                                        Username = ? , Password = ? , ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , 
+                                        MinPixelArea = ? , MinPixelRatio = ? , MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , 
+                                        MaxChangeInArea = ? , MaxChangeInWidth = ? , MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , 
+                                        MinNumberOfMatchCharNumber = ? , TopYOne = ? , TopYTwo = ? , BottomYOne = ? , BottomYTwo = ?, 
+                                        CameraStatus = ? WHERE CameraName = ?""",
+                                     (cameraName, cameraIP, cameraIPAddition, username, password, protocolType,
+                                      minPixelWidth,
+                                      minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize,
+                                      maxDiagSize,
+                                      maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
+                                      minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo,
+                                      cameraStatus,
+                                      self.oldCameraName))
+                        conn.commit()
+                        self.LoadCameraDatabase()
+                        QMessageBox.information(self.updateCameraPage, 'Güncelleme Başarılı!',
+                                                "Kamera konfigürasyon güncellemesi başarı ile yapıldı!\n",
+                                                QMessageBox.Ok, QMessageBox.Ok)
+                        self.updateCameraPage.close()
+                    else:
+                        QMessageBox.warning(self.updateCameraPage, 'Güncelleme Hatası!',
+                                            "Girilen kamera ismi sistemde mevcut!\n",
+                                            QMessageBox.Ok, QMessageBox.Ok)
+            else:
+                QMessageBox.warning(self.updateCameraPage, 'Güncelleme Hatası!',
+                                    "Girilen bilgiler geçersiz!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
-            if(check==False):
-                curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , 
-                Username = ? , Password = ? , ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , 
-                MinPixelArea = ? , MinPixelRatio = ? , MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , 
-                MaxChangeInArea = ? , MaxChangeInWidth = ? , MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , 
-                MinNumberOfMatchCharNumber = ? , TopYOne = ? , TopYTwo = ? , BottomYOne = ? , BottomYTwo = ?, 
-                CameraStatus = ? WHERE CameraName = ?""",
-                             (cameraName, cameraIP, cameraIPAddition, username, password, protocolType,
-                              minPixelWidth,
-                              minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize,
-                              maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
-                              minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo, cameraStatus,
-                              self.oldCameraName))
-                conn.commit()
-                self.LoadCameraDatabase()
-                self.updateCameraPage.close()
-                QMessageBox.information(self, 'Güncelleme Başarılı!',
-                                        "Kamera konfigürasyon güncellemesi başarı ile yapıldı!\n",
-                                        QMessageBox.Ok, QMessageBox.Ok)
-            else:
-                QMessageBox.warning(self, 'Güncelleme Hatası!',
-                                    "Girilen kamera ismi sistemde mevcut!\n",
-                                    QMessageBox.Ok, QMessageBox.Ok)
-
+            QMessageBox.warning(self.updateCameraPage, 'Fotoğraf Kontürleri!',
+                                "Lütfen fotoğraf kontürleri için geçerli değerler giriniz!\n",
+                                QMessageBox.Ok, QMessageBox.Ok)
 
     def DisplayPhoto(self, img):
         qformat = QImage.Format_Indexed8
