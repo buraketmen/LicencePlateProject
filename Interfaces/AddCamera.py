@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'AddCamera.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -178,6 +178,7 @@ class Ui_Dialog(object):
         font.setFamily("Arial")
         font.setPointSize(12)
         self.editCameraName.setFont(font)
+        self.editCameraName.setToolTipDuration(9999)
         self.editCameraName.setText("")
         self.editCameraName.setClearButtonEnabled(True)
         self.editCameraName.setObjectName("editCameraName")
@@ -189,6 +190,7 @@ class Ui_Dialog(object):
         font.setFamily("Arial")
         font.setPointSize(12)
         self.editCameraIP.setFont(font)
+        self.editCameraIP.setToolTipDuration(9999)
         self.editCameraIP.setText("")
         self.editCameraIP.setClearButtonEnabled(True)
         self.editCameraIP.setObjectName("editCameraIP")
@@ -200,6 +202,7 @@ class Ui_Dialog(object):
         font.setFamily("Arial")
         font.setPointSize(12)
         self.editCameraIPAddition.setFont(font)
+        self.editCameraIPAddition.setToolTipDuration(9999)
         self.editCameraIPAddition.setClearButtonEnabled(True)
         self.editCameraIPAddition.setObjectName("editCameraIPAddition")
         self.verticalLayout_2.addWidget(self.editCameraIPAddition)
@@ -210,6 +213,7 @@ class Ui_Dialog(object):
         font.setFamily("Arial")
         font.setPointSize(12)
         self.editUsername.setFont(font)
+        self.editUsername.setToolTipDuration(9999)
         self.editUsername.setClearButtonEnabled(True)
         self.editUsername.setObjectName("editUsername")
         self.verticalLayout_2.addWidget(self.editUsername)
@@ -220,6 +224,7 @@ class Ui_Dialog(object):
         font.setFamily("Arial")
         font.setPointSize(12)
         self.editPassword.setFont(font)
+        self.editPassword.setToolTipDuration(9999)
         self.editPassword.setClearButtonEnabled(True)
         self.editPassword.setObjectName("editPassword")
         self.verticalLayout_2.addWidget(self.editPassword)

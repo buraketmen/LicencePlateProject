@@ -291,8 +291,12 @@ class Ui_MainWindow(object):
         self.actionAddFont.setObjectName("actionAddFont")
         self.actionFonts = QtWidgets.QAction(MainWindow)
         self.actionFonts.setObjectName("actionFonts")
+        self.actionPlate = QtWidgets.QAction(MainWindow)
+        self.actionPlate.setObjectName("actionPlate")
         self.menuKameralar.addAction(self.actionAddCamera)
         self.menuKameralar.addAction(self.actionCameras)
+        self.menuKameralar.addSeparator()
+        self.menuKameralar.addAction(self.actionPlate)
         self.menuFontlar.addAction(self.actionAddFont)
         self.menuFontlar.addAction(self.actionFonts)
         self.menubar.addAction(self.menuKameralar.menuAction())
@@ -345,5 +349,6 @@ class Ui_MainWindow(object):
         self.actionCameras.setText(_translate("MainWindow", "Kameralar"))
         self.actionAddFont.setText(_translate("MainWindow", "Font Ekle"))
         self.actionFonts.setText(_translate("MainWindow", "Fontlar"))
+        self.actionPlate.setText(_translate("MainWindow", "Plaka"))
 
 

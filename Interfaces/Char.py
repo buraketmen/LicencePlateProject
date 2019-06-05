@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'Char.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -55,6 +55,7 @@ class Ui_Dialog(object):
         font.setBold(False)
         font.setWeight(50)
         self.editChar.setFont(font)
+        self.editChar.setToolTipDuration(9999)
         self.editChar.setObjectName("editChar")
         self.horizontalLayout.addWidget(self.editChar)
 

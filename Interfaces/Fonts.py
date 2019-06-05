@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'Fonts.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -63,6 +63,7 @@ class Ui_Dialog(object):
         font.setItalic(False)
         font.setWeight(75)
         self.buttonUseFont.setFont(font)
+        self.buttonUseFont.setToolTipDuration(9999)
         self.buttonUseFont.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.buttonUseFont.setObjectName("buttonUseFont")
         self.verticalLayout_2.addWidget(self.buttonUseFont)
@@ -84,6 +85,7 @@ class Ui_Dialog(object):
         font.setItalic(False)
         font.setWeight(75)
         self.buttonDeleteFont.setFont(font)
+        self.buttonDeleteFont.setToolTipDuration(9999)
         self.buttonDeleteFont.setObjectName("buttonDeleteFont")
         self.verticalLayout_2.addWidget(self.buttonDeleteFont)
         self.line_5 = QtWidgets.QFrame(self.scrollAreaWidgetContents)

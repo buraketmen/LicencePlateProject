@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'AddFont.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -117,6 +117,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         font.setWeight(75)
         self.buttonStartRecording.setFont(font)
+        self.buttonStartRecording.setToolTipDuration(9999)
         self.buttonStartRecording.setObjectName("buttonStartRecording")
         self.buttonAddPhoto = QtWidgets.QPushButton(Dialog)
         self.buttonAddPhoto.setGeometry(QtCore.QRect(260, 650, 300, 41))
@@ -151,6 +152,7 @@ class Ui_Dialog(object):
         font.setFamily("Calibri")
         font.setPointSize(12)
         self.editFontName.setFont(font)
+        self.editFontName.setToolTipDuration(9999)
         self.editFontName.setInputMethodHints(QtCore.Qt.ImhNone)
         self.editFontName.setText("")
         self.editFontName.setMaxLength(30)

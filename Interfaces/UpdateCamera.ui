@@ -262,6 +262,9 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="toolTipDuration">
+    <number>9999</number>
+   </property>
    <property name="text">
     <string>SINIRLARI GÖSTER</string>
    </property>
@@ -353,6 +356,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -382,6 +388,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -413,6 +422,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="clearButtonEnabled">
        <bool>true</bool>
       </property>
@@ -439,6 +451,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -470,6 +485,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -499,6 +517,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -530,6 +551,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -559,6 +583,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -590,6 +617,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -619,6 +649,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -650,6 +683,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -679,6 +715,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -1146,6 +1185,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -1175,6 +1217,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -1206,6 +1251,9 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
+      </property>
       <property name="clearButtonEnabled">
        <bool>true</bool>
       </property>
@@ -1232,6 +1280,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -1262,6 +1313,9 @@
         <weight>50</weight>
         <bold>false</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string/>
@@ -1406,7 +1460,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>740</x>
@@ -1425,6 +1479,9 @@
         <weight>75</weight>
         <bold>true</bold>
        </font>
+      </property>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
        <string>Kamera Durumu</string>

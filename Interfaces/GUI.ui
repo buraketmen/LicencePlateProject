@@ -491,6 +491,8 @@
     </property>
     <addaction name="actionAddCamera"/>
     <addaction name="actionCameras"/>
+    <addaction name="separator"/>
+    <addaction name="actionPlate"/>
    </widget>
    <widget class="QMenu" name="menuFontlar">
     <property name="title">
@@ -620,6 +622,11 @@
   <action name="actionFonts">
    <property name="text">
     <string>Fontlar</string>
+   </property>
+  </action>
+  <action name="actionPlate">
+   <property name="text">
+    <string>Plaka</string>
    </property>
   </action>
  </widget>

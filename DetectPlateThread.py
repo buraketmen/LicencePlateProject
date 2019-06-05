@@ -8,6 +8,7 @@ import sqlite3
 import DetectPlates
 import cv2
 import os
+import time
 from pythonping import ping
 
 conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
@@ -24,7 +25,7 @@ path = str(path)
         return False"""
 
 def GetPing(ip):
-    response = ping(ip, size=1, count=1)
+    response = ping(ip, size=5, count=2)
     if(str(response)[0:7]=="Request"):
         return False
     else:
@@ -75,7 +76,6 @@ class camThread(threading.Thread):
             if (str(ThreadStatus.readline()) == "False"):
                 break
             img = self.capture.read()
-            print("4")
             if (len(img) != 0):
                 imgtop = img[self.topYOne:self.topYTwo, 0:640]
                 imgbottom = img[self.bottomYOne:self.bottomYTwo, 0:640]
@@ -92,7 +92,7 @@ class camThread(threading.Thread):
                     listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars),
                                                  reverse=True)
                     licPlateTop = listOfPossiblePlatesTop[0]
-                    if (len(licPlateTop.strChars) > 4):
+                    if (len(licPlateTop.strChars) > 6):
                         print(licPlateTop.strChars)
                     if (len(licPlateTop.strChars) == 8):
                         if (self.checkPlateTop == licPlateTop.strChars):
@@ -119,6 +119,7 @@ class camThread(threading.Thread):
                                 self.Add2Database(licPlateBottom.strChars, licPlateBottom.imgPlate,
                                                   licPlateBottom.imgThresh, imgbottom)
                             self.checkPlateBottom = licPlateBottom.strChars
+                time.sleep(1)
 
     def Add2Database(self, plate, imgPlate, imgThresh, img):
         an = datetime.datetime.now()

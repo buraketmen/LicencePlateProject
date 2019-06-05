@@ -115,6 +115,9 @@
                <bold>true</bold>
               </font>
              </property>
+             <property name="toolTipDuration">
+              <number>9999</number>
+             </property>
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
              </property>
@@ -157,6 +160,9 @@
                <italic>false</italic>
                <bold>true</bold>
               </font>
+             </property>
+             <property name="toolTipDuration">
+              <number>9999</number>
              </property>
              <property name="text">
               <string>Fontu Sil</string>

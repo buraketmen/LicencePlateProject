@@ -12,13 +12,13 @@ import PossiblePlate
 import Database
 import datetime
 import shutil
-import urllib
 from Interfaces.Cameras import Ui_Dialog
 import Interfaces.Fonts as Fonts
 import Interfaces.AddCamera as AddCamera
 import Interfaces.AddFont as AddFont
 import Interfaces.UpdateCamera as UpdateCamera
 import Interfaces.Char as Char
+import Interfaces.AddPlateInfo as AddPlateInfo
 from Interfaces.GUI import Ui_MainWindow
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal, Qt, QRegExp
 from PyQt5.QtGui import QImage, QPixmap, QRegExpValidator, QIcon
@@ -38,7 +38,7 @@ path = str(path)
 frameSize = (640, 480)
 
 def GetPing(ip):
-    response = ping(ip, size=1, count=1)
+    response = ping(ip, size=5, count=2)
     if(str(response)[0:7]=="Request"):
         return False
     else:
@@ -56,10 +56,10 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.checkPlateTop = None
         self.fname = None
         self.checkTop = 0
+        self.checkBottom = 0
         self.txtClass = None
         self.checkPlateBottom = None
         self.listCamera = []
-        self.checkBottom = 0
         self.backimage = cv2.imread(path + '\\Fonts\\background.png')
         self.InitUi()
         self.UpdateStatusBar()
@@ -67,7 +67,6 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
     def InitUi(self):
         self.show()
         Database.setDatabase()
-
         comboboxThread = threading.Thread(target=self.FillComboBox)
         comboboxThread.daemon = True
         comboboxThread.start()
@@ -86,6 +85,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.actionAddCamera.triggered.connect(self.ShowAddCameraPage)
         self.actionFonts.triggered.connect(self.ShowFontsPage)
         self.actionAddFont.triggered.connect(self.ShowAddFont)
+        self.actionPlate.triggered.connect(self.ShowAddPlateInfoPage)
         self.ComboBoxCameras.setEnabled(True)
         self.detectButton.setEnabled(False)
 
@@ -95,7 +95,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.startButton.setStatusTip("Kameraları başlatmak için tıkla.")
         self.stopButton.setStatusTip("Kamerayı durdurmak için tıkla.")
         self.trainButton.setStatusTip("Plaka tanıma için gerekli algoritmayı sisteme yükler.")
-        self.detectButton.setStatusTip("Plaka tanımayı başlatmak için tıkla. Aktif hale gelmesi için KNN taraması yapılmalı.")
+        self.detectButton.setStatusTip("Çalışır haldeki tüm kameralarda plaka tanımayı başlatmak için tıkla. Aktif hale gelmesi için KNN taraması yapılmalı. (Kamera IP bilgileri yanlışsa tarama yapılmayacaktır.)")
         self.tableWidget.setStatusTip("Kameralarda görünen ve veritabanına kaydedilen plakalar yer alır.")
         self.tableWidget_2.setStatusTip("Listeden seçilen kamerada okunan tüm veriler yer alır.")
         self.ComboBoxCameras.setStatusTip("Sistemde var olan ve çalışır durumdaki kameralar yer alır.")
@@ -114,8 +114,40 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     self.listCamera = listofCameras.copy()
                     self.ComboBoxCameras.clear()
                     self.ComboBoxCameras.addItems(self.listCamera)
-            time.sleep(5)
-        
+            time.sleep(30)
+
+    def ShowAddPlateInfoPage(self):
+        self.AddPlateInfo = AddPlateInfo()
+        regexint = QRegExp("[0-9_]+")
+        validatorint = QRegExpValidator(regexint)
+        self.AddPlateInfo.editBottomCharCount.setValidator(validatorint)
+        self.AddPlateInfo.editBottomMinCharCount.setValidator(validatorint)
+        self.AddPlateInfo.editTopCharCount.setValidator(validatorint)
+        self.AddPlateInfo.editTopMinCharCount.setValidator(validatorint)
+        self.AddPlateInfo.editControlCount.setValidator(validatorint)
+        self.AddPlateInfo.buttonSave.clicked.connect(self.SavePlateInfo)
+        try:
+            plateinfo = open("PlateInfo.txt", "r")
+            line = str(plateinfo.readline())
+            counts = line.split(",")
+            self.AddPlateInfo.editTopCharCount.setText(counts[0])
+            self.AddPlateInfo.editTopMinCharCount.setText(counts[1])
+            self.AddPlateInfo.editBottomCharCount.setText(counts[2])
+            self.AddPlateInfo.editBottomMinCharCount.setText(counts[3])
+            self.AddPlateInfo.editControlCount.setText(counts[4])
+        except:
+            plateinfo = open("PlateInfo.txt", "w")
+            plateinfo.write("8,6,12,10,6")
+            plateinfo = open("PlateInfo.txt", "r")
+            line = str(plateinfo.readline())
+            counts = line.split(",")
+            self.AddPlateInfo.editTopCharCount.setText(counts[0])
+            self.AddPlateInfo.editTopMinCharCount.setText(counts[1])
+            self.AddPlateInfo.editBottomCharCount.setText(counts[2])
+            self.AddPlateInfo.editBottomMinCharCount.setText(counts[3])
+            self.AddPlateInfo.editControlCount.setText(counts[4])
+        self.AddPlateInfo.exec_()
+
     def ShowCamerasPage(self):
         self.cameraPage = Cameras()
         self.cameraPage.exec_()
@@ -157,6 +189,23 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         self.addFontPage.editFontName.textChanged.connect(self.DisableButtonFontPage)
         self.addFontPage.exec_()
 
+    def SavePlateInfo(self):
+        topCharCount = self.AddPlateInfo.editTopCharCount.text()
+        topMinCharCount = self.AddPlateInfo.editTopMinCharCount.text()
+        bottomCharCount = self.AddPlateInfo.editBottomCharCount.text()
+        bottomMinCharCount = self.AddPlateInfo.editBottomMinCharCount.text()
+        controlCount = self.AddPlateInfo.editControlCount.text()
+        if(len(topCharCount) != 0 and len(topMinCharCount) != 0 and len(bottomCharCount) != 0 and len(bottomMinCharCount) != 0 and len(controlCount)!= 0):
+            plateinfo = open("PlateInfo.txt", "w")
+            plateinfo.write(topCharCount+","+topMinCharCount+","+bottomCharCount+","+bottomMinCharCount+","+controlCount)
+            plateinfo.close()
+            self.AddPlateInfo.close()
+        else:
+            QMessageBox.warning(self.AddPlateInfo, 'Geçersiz Giriş',
+                                "Lütfen alanları boş bırakmayınız!",
+                                QMessageBox.Ok, QMessageBox.Ok)
+
+
     def DisableButtonFontPage(self):
         if (len(self.addFontPage.editFontName.text()) > 0):
             self.addFontPage.buttonStartRecording.setEnabled(True)
@@ -167,19 +216,23 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
 
     def AddFontPhoto(self):
         try:
-            self.fname, filter = QFileDialog().getOpenFileName(self, 'Font Fotoğrafını Seç', '', ("Image Files (*.jpg)"))
+            self.fname, filter = QFileDialog().getOpenFileName(self.addFontPage, 'Font Fotoğrafını Seç', '', ("Image Files (*.jpg)"))
             if self.fname:
                 self.LoadPhoto(self.fname)
+            else:
+                self.fname = None
         except Exception as error:
+            self.fname = None
             self.fontPhoto = None
             QMessageBox.warning(self.addFontPage, 'Fotograf Uzanti Hatasi',
                                 "Fotoğraf uzantısını değistirerek tekrar deneyiniz!",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
     def DetectWebcam(self, status):
-        txtfile = open("ThreadStatus.txt", "w")
+
         self.trainButton.setEnabled(False)
         if status:
+            txtfile = open("ThreadStatus.txt", "w")
             txtfile.write("True")
             txtfile.close()
             self.detectButton.setText('Plaka Tanımayı Durdur')
@@ -190,6 +243,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     t.daemon = True
                     t.start()
         else:
+            txtfile = open("ThreadStatus.txt", "w")
             txtfile.write("False")
             txtfile.close()
             self.detectButton.setText('Plaka Tanimayi Baslat')
@@ -280,72 +334,82 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         RESIZED_IMAGE_HEIGHT = 30
         Check = True
         if (len(str(self.addFontPage.editFontName.text())) != 0):
-            fontName = str(self.addFontPage.editFontName.text())
-            stream = open(self.fname, "rb")
-            bytes = bytearray(stream.read())
-            numpyarray = np.asarray(bytes, dtype=np.uint8)
-            imgTrainingNumbers = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
-            imgGray = cv2.cvtColor(imgTrainingNumbers, cv2.COLOR_BGR2GRAY)
-            imgBlurred = cv2.GaussianBlur(imgGray, (5, 5), 0)
-            imgThresh = cv2.adaptiveThreshold(imgBlurred,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
-            imgThreshCopy = imgThresh.copy()
-            npaContours, npaHierarchy = cv2.findContours(imgThreshCopy, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            npaFlattenedImages = np.empty((0, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
-            charCount = 0
-            intClassifications = []
-            intValidChars = [ord('0'), ord('1'), ord('2'), ord('3'), ord('4'), ord('5'), ord('6'), ord('7'), ord('8'),
-                             ord('9'), ord('A'), ord('B'), ord('C'), ord('D'), ord('E'), ord('F'), ord('G'), ord('H'),
-                             ord('I'), ord('J'), ord('K'), ord('L'), ord('M'), ord('N'), ord('O'), ord('P'), ord('Q'),
-                             ord('R'), ord('S'), ord('T'), ord('U'), ord('V'), ord('W'), ord('X'), ord('Y'), ord('Z'),
-                             ord('/'), ord('-'), ord('@')]
-            for npaContour in npaContours:  # for each contour
-                if cv2.contourArea(npaContour) > MIN_CONTOUR_AREA:
-                    [intX, intY, intW, intH] = cv2.boundingRect(npaContour)
-                    cv2.rectangle(imgTrainingNumbers, (intX, intY), (intX + intW, intY + intH), (0, 0, 255), 3)
-                    imgROI = imgThresh[intY:intY + intH, intX:intX + intW]
-                    imgROIResized = cv2.resize(imgROI, (RESIZED_IMAGE_WIDTH, RESIZED_IMAGE_HEIGHT))
-                    self.DisplayPhoto(imgROIResized, "Char")
-                    self.DisplayPhoto(imgThresh, "Thresh")
-                    self.DisplayPhoto(imgTrainingNumbers, "Font")
-                    self.ShowCharPage()
-                    intChar = self.char
-                    if intChar == None:  #ESC
-                        Check = False
-                        QMessageBox.warning(self.addFontPage, 'Çıkış',
-                                            "İşlem iptal edildi!",
-                                            QMessageBox.Ok, QMessageBox.Ok)
-                        self.addFontPage.close()
-                    if intChar in intValidChars:
-                        intClassifications.append(intChar)
-                        npaFlattenedImage = imgROIResized.reshape((1, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
-                        npaFlattenedImages = np.append(npaFlattenedImages, npaFlattenedImage, 0)
-                        charCount = charCount + 1
-                        self.char = None
-                if (Check == False):
-                    break
-            fltClassifications = np.array(intClassifications, np.float32)
-            npaClassifications = fltClassifications.reshape((fltClassifications.size, 1))
-            if (Check == True):
-                if (len(fontName) > 0):
-                    search = curs.execute('SELECT FontName FROM Fonts WHERE FontName = ? ', (fontName,))
-                    results = search.fetchone()
-                    if (results == None):
-                        newpath = path + "Fonts" + "\\" + str(fontName) + "\\"
-                        an = datetime.datetime.now()
-                        fontDate = str(an.day) + "/" + str(an.month) + "/" + str(an.year)
-                        curs.execute("""INSERT INTO Fonts(FontName, FontDate, FontFileDir, CharCountInFont) 
-                                VALUES(?,?,?,?)""", (fontName, str(fontDate), newpath, str(charCount)))
-                        conn.commit()
-                        charCount = 0
-                        os.makedirs(newpath)
-                        np.savetxt(newpath + "classifications.txt",
-                                   npaClassifications)  # write flattened images to file
-                        np.savetxt(newpath + "flattened_images.txt", npaFlattenedImages)  #
-                        self.char == None
-                        self.addFontPage.close()
-                        QMessageBox.information(self.addFontPage, 'Kayıt Başarılı',
-                                                "Font için sınıflandırma ve fotoğraf dizeleri başarıyla oluşturuldu.",
+            if(self.fname != None ):
+                fontName = str(self.addFontPage.editFontName.text())
+                stream = open(self.fname, "rb")
+                bytes = bytearray(stream.read())
+                numpyarray = np.asarray(bytes, dtype=np.uint8)
+                imgTrainingNumbers = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
+                imgGray = cv2.cvtColor(imgTrainingNumbers, cv2.COLOR_BGR2GRAY)
+                imgBlurred = cv2.GaussianBlur(imgGray, (5, 5), 0)
+                imgThresh = cv2.adaptiveThreshold(imgBlurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                  cv2.THRESH_BINARY_INV, 11, 2)
+                imgThreshCopy = imgThresh.copy()
+                npaContours, npaHierarchy = cv2.findContours(imgThreshCopy, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                npaFlattenedImages = np.empty((0, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
+                charCount = 0
+                intClassifications = []
+                intValidChars = [ord('0'), ord('1'), ord('2'), ord('3'), ord('4'), ord('5'), ord('6'), ord('7'),
+                                 ord('8'),
+                                 ord('9'), ord('A'), ord('B'), ord('C'), ord('D'), ord('E'), ord('F'), ord('G'),
+                                 ord('H'),
+                                 ord('I'), ord('J'), ord('K'), ord('L'), ord('M'), ord('N'), ord('O'), ord('P'),
+                                 ord('Q'),
+                                 ord('R'), ord('S'), ord('T'), ord('U'), ord('V'), ord('W'), ord('X'), ord('Y'),
+                                 ord('Z'),
+                                 ord('/'), ord('-'), ord('@')]
+                for npaContour in npaContours:  # for each contour
+                    if cv2.contourArea(npaContour) > MIN_CONTOUR_AREA:
+                        [intX, intY, intW, intH] = cv2.boundingRect(npaContour)
+                        cv2.rectangle(imgTrainingNumbers, (intX, intY), (intX + intW, intY + intH), (0, 0, 255), 3)
+                        imgROI = imgThresh[intY:intY + intH, intX:intX + intW]
+                        imgROIResized = cv2.resize(imgROI, (RESIZED_IMAGE_WIDTH, RESIZED_IMAGE_HEIGHT))
+                        self.DisplayPhoto(imgROIResized, "Char")
+                        self.DisplayPhoto(imgThresh, "Thresh")
+                        self.DisplayPhoto(imgTrainingNumbers, "Font")
+                        self.ShowCharPage()
+                        intChar = self.char
+                        if intChar == None:  # ESC
+                            Check = False
+                            QMessageBox.warning(self.addFontPage, 'Çıkış',
+                                                "İşlem iptal edildi!",
                                                 QMessageBox.Ok, QMessageBox.Ok)
+                            self.addFontPage.close()
+                        if intChar in intValidChars:
+                            intClassifications.append(intChar)
+                            npaFlattenedImage = imgROIResized.reshape((1, RESIZED_IMAGE_WIDTH * RESIZED_IMAGE_HEIGHT))
+                            npaFlattenedImages = np.append(npaFlattenedImages, npaFlattenedImage, 0)
+                            charCount = charCount + 1
+                            self.char = None
+                    if (Check == False):
+                        break
+                fltClassifications = np.array(intClassifications, np.float32)
+                npaClassifications = fltClassifications.reshape((fltClassifications.size, 1))
+                if (Check == True):
+                    if (len(fontName) > 0):
+                        search = curs.execute('SELECT FontName FROM Fonts WHERE FontName = ? ', (fontName,))
+                        results = search.fetchone()
+                        if (results == None):
+                            newpath = path + "Fonts" + "\\" + str(fontName) + "\\"
+                            an = datetime.datetime.now()
+                            fontDate = str(an.day) + "/" + str(an.month) + "/" + str(an.year)
+                            curs.execute("""INSERT INTO Fonts(FontName, FontDate, FontFileDir, CharCountInFont) 
+                                                VALUES(?,?,?,?)""", (fontName, str(fontDate), newpath, str(charCount)))
+                            conn.commit()
+                            charCount = 0
+                            os.makedirs(newpath)
+                            np.savetxt(newpath + "classifications.txt",
+                                       npaClassifications)  # write flattened images to file
+                            np.savetxt(newpath + "flattened_images.txt", npaFlattenedImages)  #
+                            self.char == None
+                            self.addFontPage.close()
+                            QMessageBox.information(self.addFontPage, 'Kayıt Başarılı',
+                                                    "Font için sınıflandırma ve fotoğraf dizeleri başarıyla oluşturuldu.",
+                                                    QMessageBox.Ok, QMessageBox.Ok)
+            else:
+                QMessageBox.warning(self.addFontPage, 'Geçersiz İşlem',
+                                        "Lütfen font için bir fotoğraf seçiniz!",
+                                        QMessageBox.Ok, QMessageBox.Ok)
         else:
             QMessageBox.warning(self.addFontPage, 'Font İsim Hatası',
                                 "Lütfen font için isim giriniz!",
@@ -405,7 +469,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         countDot = self.CountofLetter(cameraIP,".")
         search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
         results = search.fetchone()
-        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != "" and countDot ==3):
+        if (len(cameraIP) < 16 and len(cameraIP) > 6 and len(cameraName) != 0 and countDot ==3):
             if (cameraIP[-1] == "."):
                 cameraIP = cameraIP + "0"
             if (results == None):
@@ -440,7 +504,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
     def LoadDatabase(self):
         while self.tableWidget.rowCount() > 0:
             self.tableWidget.removeRow(0)
-        content = 'SELECT Plate,Date,Time FROM Plates'
+        content = 'SELECT Plate,Date,Time,Camera FROM Plates'
         res = conn.execute(content)
         for row_index, row_data in enumerate(res):
             self.tableWidget.insertRow(row_index)
@@ -594,7 +658,7 @@ class Cameras(QDialog,Ui_Dialog):
         countDot = self.CountofLetter(cameraIP, ".")
         search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
         results = search.fetchone()
-        if (len(cameraIP) < 16 and len(cameraIP) > 0 and cameraName != "" and countDot == 3):
+        if (len(cameraIP) < 16 and len(cameraIP) > 6 and len(cameraName) != 0 and countDot ==3):
             if (cameraIP[-1] == "."):
                 cameraIP = cameraIP + "0"
             if (results == None):
@@ -776,14 +840,14 @@ class Cameras(QDialog,Ui_Dialog):
         minPixelWidth = self.updateCameraPage.editMinPixelWidth.text()
         minPixelHeight = self.updateCameraPage.editMinPixelHeight.text()
         minPixelArea = self.updateCameraPage.editMinPixelArea.text()
-        minPixelRatio =  str(float(self.updateCameraPage.editMinPixelRatio.text()))
-        maxPixelRatio = str(float(self.updateCameraPage.editMaxPixelRatio.text()))
-        minDiagSize = str(float(self.updateCameraPage.editMinDiagSize.text()))
-        maxDiagSize = str(float(self.updateCameraPage.editMaxDiagSize.text()))
-        maxChangeInArea = str(float(self.updateCameraPage.editMaxChangeInArea.text()))
-        maxChangeInWidth = str(float(self.updateCameraPage.editMaxChangeInWidth.text()))
-        maxChangeInHeight = str(float(self.updateCameraPage.editMaxChangeInHeight.text()))
-        maxAngleBetweenChar = str(float(self.updateCameraPage.editMaxAngleBetweenChar.text()))
+        minPixelRatio =  self.updateCameraPage.editMinPixelRatio.text()
+        maxPixelRatio = self.updateCameraPage.editMaxPixelRatio.text()
+        minDiagSize = self.updateCameraPage.editMinDiagSize.text()
+        maxDiagSize = self.updateCameraPage.editMaxDiagSize.text()
+        maxChangeInArea = self.updateCameraPage.editMaxChangeInArea.text()
+        maxChangeInWidth = self.updateCameraPage.editMaxChangeInWidth.text()
+        maxChangeInHeight = self.updateCameraPage.editMaxChangeInHeight.text()
+        maxAngleBetweenChar = self.updateCameraPage.editMaxAngleBetweenChar.text()
         minNumberOfMatchCharNumber = self.updateCameraPage.editMinNumberOfMatchCharNumber.text()
         topYOne = self.updateCameraPage.editTopY1.text()
         topYTwo = self.updateCameraPage.editTopY2.text()
@@ -803,18 +867,24 @@ class Cameras(QDialog,Ui_Dialog):
                 cameraStatus = "Çalışmıyor"
             countDot = self.CountofLetter(cameraIP, ".")
             search = curs.execute('SELECT CameraName FROM Cameras')
-            check = False
+            check = True
             rows = search.fetchall()
             for row in rows:
                 if (str(row[0]).lower() == cameraName.lower()):
-                    check = True
-            if (len(minPixelWidth) != 0 and len(minPixelHeight) != 0 and len(minPixelArea) != 0 and len(
-                    minPixelRatio) != 0
-                    and minDiagSize != 0 and len(maxDiagSize) != 0 and len(maxChangeInArea) != 0 and len(
-                        maxChangeInWidth) != 0
-                    and len(maxChangeInHeight) != 0 and len(maxAngleBetweenChar) != 0 and len(
-                        minNumberOfMatchCharNumber) != 0
-                    and countDot == 3 and len(cameraName) != 0):
+                    check = False
+            if (len(minPixelWidth) != 0 and len(minPixelHeight) != 0 and len(minPixelArea) != 0
+                    and len(minPixelRatio) != 0 and len(minDiagSize) != 0 and len(maxDiagSize) != 0
+                    and len(maxChangeInArea) != 0 and len(maxChangeInWidth) != 0 and len(maxChangeInHeight) != 0
+                    and len(maxAngleBetweenChar) != 0 and len(minNumberOfMatchCharNumber) != 0 and countDot == 3
+                    and len(cameraName) != 0):
+                minPixelRatio = str(float(minPixelRatio))
+                maxPixelRatio = str(float(maxPixelRatio))
+                minDiagSize = str(float(minDiagSize))
+                maxDiagSize = str(float(maxDiagSize))
+                maxChangeInArea = str(float(maxChangeInArea))
+                maxChangeInWidth = str(float(maxChangeInWidth))
+                maxChangeInHeight = str(float(maxChangeInHeight))
+                maxAngleBetweenChar = str(float(maxAngleBetweenChar))
                 if (cameraIP[-1] == "."):
                     cameraIP = cameraIP + "0"
                 if (str(self.oldCameraName) == cameraName):
@@ -837,7 +907,7 @@ class Cameras(QDialog,Ui_Dialog):
                     self.updateCameraPage.close()
 
                 else:
-                    if (check == False):
+                    if (check == True):
                         curs.execute("""UPDATE Cameras SET CameraName = ? , CameraIP = ? , CameraIPAddition = ? , 
                                         Username = ? , Password = ? , ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , 
                                         MinPixelArea = ? , MinPixelRatio = ? , MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , 
@@ -1053,6 +1123,23 @@ class Char(QDialog,Char.Ui_Dialog):
             pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowTitle('Harf Giriş Ekranı')
+
+##############################################################################################
+class AddPlateInfo(QDialog,AddPlateInfo.Ui_Dialog):
+    def __init__(self,parent=None):
+        super(AddPlateInfo,self).__init__(parent)
+        self.setupUi(self)
+        self.editTopCharCount.setToolTip("Kameranın üst kısmında görülecek plakanın karakter uzunluğu?")
+        self.editTopMinCharCount.setToolTip("Kameranın üst kısmında görünen plakalarda kaç karakterden uzun olanlar Log olarak görünsün?")
+        self.editBottomCharCount.setToolTip("Kameranın alt kısmında görülecek plakanın karakter uzunluğu?")
+        self.editBottomMinCharCount.setToolTip("Kameranın alt kısmında görünen plakalarda kaç karakterden uzun olanlar Log olarak görünsün?")
+        self.editControlCount.setToolTip("Kamerada görünen plaka veritabanına kaydedilmeden önce kaç kez kontrol edilsin?")
+        try:
+            self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
+        except Exception:
+            pass
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
+        self.setWindowTitle('Plaka Karakter Bilgisi')
 
 def main():
     app = QApplication([])

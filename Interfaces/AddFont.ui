@@ -281,6 +281,9 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="toolTipDuration">
+    <number>9999</number>
+   </property>
    <property name="text">
     <string>KAYIT İŞLEMİNE BAŞLA</string>
    </property>
@@ -366,6 +369,9 @@
       <family>Calibri</family>
       <pointsize>12</pointsize>
      </font>
+    </property>
+    <property name="toolTipDuration">
+     <number>9999</number>
     </property>
     <property name="inputMethodHints">
      <set>Qt::ImhNone</set>
