@@ -77,6 +77,22 @@ class camThread(threading.Thread):
                 break
             img = self.capture.read()
             if (len(img) != 0):
+                try:
+                    plateinfo = open("PlateInfo.txt", "r")
+                    line = str(plateinfo.readline())
+                    counts = line.split(",")
+                    topCharCount = int(counts[0])
+                    topMinCharCount = int(counts[1])
+                    bottomCharCount = int(counts[2])
+                    bottomMinCharCount = int(counts[3])
+                    controlCount = int(counts[4])
+                except:
+                    topCharCount = 8
+                    topMinCharCount = 5
+                    bottomCharCount = 12
+                    bottomMinCharCount = 10
+                    controlCount = 5
+
                 imgtop = img[self.topYOne:self.topYTwo, 0:640]
                 imgbottom = img[self.bottomYOne:self.bottomYTwo, 0:640]
 
@@ -92,41 +108,49 @@ class camThread(threading.Thread):
                     listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars),
                                                  reverse=True)
                     licPlateTop = listOfPossiblePlatesTop[0]
-                    if (len(licPlateTop.strChars) > 6):
-                        print(licPlateTop.strChars)
-                    if (len(licPlateTop.strChars) == 8):
+                    if (len(licPlateTop.strChars) >= topMinCharCount):
+                        self.AddLogDatabase(licPlateBottom.strChars)
+                    if (len(licPlateTop.strChars) == topCharCount):
                         if (self.checkPlateTop == licPlateTop.strChars):
                             self.checkTop += 1
                         else:
                             self.checkTop = 0
-                        if (self.checkTop == 5):
-                            self.Add2Database(licPlateTop.strChars, licPlateTop.imgPlate, licPlateTop.imgThresh,
-                                              imgtop)
+                        if (self.checkTop == controlCount):
+                            self.AddPlateDatabase(licPlateTop.strChars, licPlateTop.imgThresh)
                         self.checkPlateTop = licPlateTop.strChars
                     if (len(listOfPossiblePlatesBottom) != 0):
                         listOfPossiblePlatesBottom.sort(key=lambda possiblePlate: len(possiblePlate.strChars),
                                                         reverse=True)
                         # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
                         licPlateBottom = listOfPossiblePlatesBottom[0]
-                        if (len(licPlateBottom.strChars) > 1):
-                            print(licPlateBottom.strChars)
-                        if (len(licPlateBottom.strChars) == 12):
+                        if (len(licPlateBottom.strChars) >= bottomMinCharCount):
+                            self.AddLogDatabase(licPlateBottom.strChars)
+                        if (len(licPlateBottom.strChars) == bottomCharCount):
                             if (self.checkPlateBottom == licPlateBottom.strChars):
                                 self.checkBottom += 1
                             else:
                                 self.checkBottom = 0
-                            if (self.checkBottom == 5):
-                                self.Add2Database(licPlateBottom.strChars, licPlateBottom.imgPlate,
-                                                  licPlateBottom.imgThresh, imgbottom)
+                            if (self.checkBottom == controlCount):
+                                self.AddPlateDatabase(licPlateBottom.strChars, licPlateBottom.imgThresh)
                             self.checkPlateBottom = licPlateBottom.strChars
                 time.sleep(1)
 
-    def Add2Database(self, plate, imgPlate, imgThresh, img):
+    def getDateAndTime(self):
         an = datetime.datetime.now()
         second = int(an.second)
         hour = int(an.hour)
         date = str(an.day) + "." + str(an.month) + "." + str(an.year)
         time = str(an.hour) + "." + str(an.minute) + "." + str(an.second)
+        return date, time
+
+    def AddLogDatabase(self,plate):
+        date, time = self.getDateAndTime()
+        curs.execute("INSERT INTO Log (Plate,Date,Time,Camera) VALUES(?,?,?,?)",
+                     (plate, date, time, self.cameraName))
+        conn.commit()
+
+    def AddPlateDatabase(self, plate, imgThresh):
+        date, time = self.getDateAndTime()
         searchall = curs.execute('SELECT Plate FROM Plates WHERE Plate = ? AND Camera =?', (plate, self.cameraName,))
         rows = searchall.fetchall()
         i = 0

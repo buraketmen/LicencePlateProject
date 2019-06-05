@@ -274,10 +274,13 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
         global Res
         # self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
         # self.capture2 = VideoStream(src='rtsp://root:root@192.168.10.49/axis-media/media.amp')
+        cameraName = self.ComboBoxCameras.currentText()
         ip, cameraIP = self.getIP()
         if(GetPing(cameraIP)):
             self.cameraStatus = True
             self.ComboBoxCameras.setEnabled(False)
+            curs.execute("DELETE FROM Log")
+            conn.commit()
             camera = threading.Thread(target=self.StartIPCamera, args=(ip,))
             camera.daemon = True
             camera.start()
@@ -297,6 +300,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.image = self.capture.read()
             if (self.image != None):
                 if (len(self.image) != 0):
+                    self.LoadLogs()
                     self.DisplayImage(self.image)
                 else:
                     self.DisplayImage(self.backimage)
@@ -511,6 +515,18 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             for colm_index, colm_data in enumerate(row_data):
                 self.tableWidget.setItem(row_index, colm_index, QTableWidgetItem(str(colm_data)))
         return
+
+    def LoadLogs(self):
+        while self.tableWidget_2.rowCount() > 0:
+            self.tableWidget_2.removeRow(0)
+        content = 'SELECT Plate,Date,Time FROM Log'
+        res = conn.execute(content)
+        for row_index, row_data in enumerate(res):
+            self.tableWidget_2.insertRow(row_index)
+            for colm_index, colm_data in enumerate(row_data):
+                self.tableWidget_2.setItem(row_index, colm_index, QTableWidgetItem(str(colm_data)))
+        return
+
 
     def DisplayImage(self, img):
         qformat = QImage.Format_Indexed8

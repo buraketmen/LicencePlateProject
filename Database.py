@@ -64,9 +64,10 @@ def setDatabase():
                 """)
     curs.execute("""
                 CREATE TABLE IF NOT EXISTS Log(
-                Id INTEGER PRIMARY KEY,
+                LogId INTEGER PRIMARY KEY,
                 Plate TEXT,
                 Date TEXT,
-                Time TEXT)
+                Time TEXT
+                Camera TEXT)
                 """)
 
