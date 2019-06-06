@@ -38,7 +38,7 @@ path = str(path)
 frameSize = (640, 480)
 
 def GetPing(ip):
-    response = ping(ip, size=5, count=2)
+    response = ping(ip, size=5, count=1)
     if(str(response)[0:7]=="Request"):
         return False
     else:
@@ -114,7 +114,7 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
                     self.listCamera = listofCameras.copy()
                     self.ComboBoxCameras.clear()
                     self.ComboBoxCameras.addItems(self.listCamera)
-            time.sleep(30)
+            time.sleep(10)
 
     def ShowAddPlateInfoPage(self):
         self.AddPlateInfo = AddPlateInfo()
@@ -845,9 +845,8 @@ class Cameras(QDialog,Ui_Dialog):
                     self.updateCameraPage.radioButtonNotWorking.setChecked(True)
                     self.updateCameraPage.buttonShowCounters.setEnabled(False)
 
-
-
     def UpdateCamera(self):
+        countDot = 0
         cameraName = self.updateCameraPage.editCameraName.text()
         cameraIP = self.updateCameraPage.editCameraIP.text()
         cameraIPAddition = self.updateCameraPage.editCameraIPAddition.text()
@@ -881,7 +880,9 @@ class Cameras(QDialog,Ui_Dialog):
                 cameraStatus = "Çalışıyor"
             if (self.updateCameraPage.radioButtonNotWorking.isChecked() == True):
                 cameraStatus = "Çalışmıyor"
-            countDot = self.CountofLetter(cameraIP, ".")
+            if(len(cameraIP) < 16 and len(cameraIP) > 6):
+                countDot = self.CountofLetter(cameraIP, ".")
+            print(countDot)
             search = curs.execute('SELECT CameraName FROM Cameras')
             check = True
             rows = search.fetchall()
@@ -1014,6 +1015,8 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
         super(Fonts,self).__init__(parent)
         self.setupUi(self)
         self.fontName = None
+        self.buttonUseFont.setToolTip("Fontu kullanmak için tıkla. Bir font seçildiği takdirde önceki iptal edilir.")
+        self.buttonDeleteFont.setToolTip("""Fontu silmek için tıkla. Bir font silindiği takdirde font için "Default" değerler kullanılır""")
         try:
             self.setWindowIcon(QIcon(str(path) + "\\vagonplaka.png"))
         except Exception:
@@ -1097,6 +1100,8 @@ class AddFont(QDialog,AddFont.Ui_Dialog):
     def __init__(self,parent=None):
         super(AddFont,self).__init__(parent)
         self.setupUi(self)
+        self.editFontName.setToolTip("Font ismini giriniz. Boş bırakılamaz.")
+        self.buttonStartRecording.setToolTip("Font fotoğrafı ve adı belirlendiyse sistem için font oluşturma işlemine başla.")
         try:
             self.setWindowIcon(QIcon(str(path) + "\\vagonplaka.png"))
         except Exception:
@@ -1109,6 +1114,12 @@ class AddCamera(QDialog,AddCamera.Ui_Dialog):
     def __init__(self,parent=None):
         super(AddCamera,self).__init__(parent)
         self.setupUi(self)
+        self.editCameraName.setToolTip("Kameranın sistemde görüneceği isim. Boş bırakılamaz.")
+        self.editCameraIP.setToolTip("Kameraya ulaşılması için IP giriniz. (Örn. 192.168.1.1)")
+        self.editCameraIPAddition.setToolTip("Kamera IP'sinin uzantısını giriniz. (Örn. axis-media/media.amp)")
+        self.editUsername.setToolTip("Ulaşılacak kameranın kullanıcı adını giriniz.")
+        self.editPassword.setToolTip("Ulaşılacak kameranın şifresini giriniz.")
+        self.labelProtocolType.setToolTip("""Kameranın sahip olduğu protokol tipi. "Rtsp" tavsiye edilir.""")
         try:
             self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
         except Exception:
@@ -1121,24 +1132,48 @@ class UpdateCamera(QDialog,UpdateCamera.Ui_Dialog):
     def __init__(self,parent=None):
         super(UpdateCamera,self).__init__(parent)
         self.setupUi(self)
+        self.editCameraName.setToolTip("Kameranın sistemde görüneceği isim. Boş bırakılamaz.")
+        self.editCameraIP.setToolTip("Kameraya ulaşılması için IP giriniz. (Örn. 192.168.1.1)")
+        self.editCameraIPAddition.setToolTip("Kamera IP'sinin uzantısını giriniz. (Örn. axis-media/media.amp)")
+        self.editUsername.setToolTip("Ulaşılacak kameranın kullanıcı adını giriniz.")
+        self.editPassword.setToolTip("Ulaşılacak kameranın şifresini giriniz.")
+        self.labelProtocolType.setToolTip("""Kameranın sahip olduğu protokol tipi. "Rtsp" tavsiye edilir.""")
+        self.editMinPixelWidth.setToolTip("Seçili alandaki her bir karakterin minimum piksel genişliği.")
+        self.editMinPixelHeight.setToolTip("Seçili alandaki her bir karakterin minimum piksel yüksekliği.")
+        self.editMinPixelArea.setToolTip("Seçili alandaki her bir karakterin kapladığı piksel alanı. (Genişlik x Yükseklik)")
+        self.editMinPixelRatio.setToolTip("Seçili alandaki her bir karakterin minimum genişlik ve yükseklik oranı. (Genişlik / Yükseklik)")
+        self.editMaxPixelRatio.setToolTip("Seçili alandaki her bir karakterin maksimum genişlik ve yükseklik oranı. (Genişlik / Yükseklik)")
+        self.editMinDiagSize.setToolTip("Seçili alandaki farklı iki karakter arasındaki uzaklığın minimum çarpanı. (√a2+b2 * Çarpan)")
+        self.editMaxDiagSize.setToolTip("Seçili alandaki farklı iki karakter arasındaki uzaklığın maksimum çarpanı. (√a2+b2 * Çarpan)")
+        self.editMaxChangeInArea.setToolTip("Seçili alandaki her bir karakterin kapladığı piksel alanındaki kabul edilebilir maksimum tolerans değeri. (%100 = 1.0)")
+        self.editMaxChangeInWidth.setToolTip("Seçili alandaki her bir karakterin tanınırken genişliğindeki kabul edilebilir maksimum tolerans değeri. (%100 = 1.0)")
+        self.editMaxChangeInHeight.setToolTip("Seçili alandaki her bir karakterin tanınırken yüksekliğindeki kabul edilebilir maksimum tolerans değeri. (%100 = 1.0)")
+        self.editMaxAngleBetweenChar.setToolTip("Seçili alandaki farklı iki karakter arasındaki kabul edilebilir maksimum açı. (X1-X2 / Y1-Y2)")
+        self.editMinNumberOfMatchCharNumber.setToolTip("Seçili alanlardaki okunması istenen minimum karakter sayısı.")
+        self.labelCameraStatus.setToolTip("Kameranın çalışma durumu. Çalışmıyor olarak belirtilen kamera sisteme dahil edilmez.")
+        self.editTopY1.setToolTip("Siyah arkaplanda yyazılmış karakterlerin okunacağı alanın üst kordinatı.")
+        self.editTopY2.setToolTip("Siyah arkaplanda yazılmış karakterlerin okunacağı alanın alt kordinatı.")
+        self.editBottomY1.setToolTip("Beyaz arkaplanda yazılmış karakterlerin okunacağı alanın üst kordinatı.")
+        self.editBottomY2.setToolTip("Beyaz arkaplanda yazılmış karakterlerin okunacağı alanın alt kordinatı.")
         try:
             self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
         except Exception:
             pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
-        self.setWindowTitle('Kamera Bilgilerini Güncelle')
+        self.setWindowTitle('Kamera Konfigürasyonu')
 
 ##############################################################################################
 class Char(QDialog,Char.Ui_Dialog):
     def __init__(self,parent=None):
         super(Char,self).__init__(parent)
         self.setupUi(self)
+        self.editChar.setToolTip("Seçilen karakteri girin.")
         try:
             self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))
         except Exception:
             pass
         self.setWindowFlags(Qt.WindowCloseButtonHint)
-        self.setWindowTitle('Harf Giriş Ekranı')
+        self.setWindowTitle('Harf Girişi')
 
 ##############################################################################################
 class AddPlateInfo(QDialog,AddPlateInfo.Ui_Dialog):
@@ -1146,9 +1181,9 @@ class AddPlateInfo(QDialog,AddPlateInfo.Ui_Dialog):
         super(AddPlateInfo,self).__init__(parent)
         self.setupUi(self)
         self.editTopCharCount.setToolTip("Kameranın üst kısmında görülecek plakanın karakter uzunluğu?")
-        self.editTopMinCharCount.setToolTip("Kameranın üst kısmında görünen plakalarda kaç karakterden uzun olanlar Log olarak görünsün?")
+        self.editTopMinCharCount.setToolTip("Kameranın üst kısmında görünen plakalardan, kaç karakterden uzun olanlar Log olarak görünsün?")
         self.editBottomCharCount.setToolTip("Kameranın alt kısmında görülecek plakanın karakter uzunluğu?")
-        self.editBottomMinCharCount.setToolTip("Kameranın alt kısmında görünen plakalarda kaç karakterden uzun olanlar Log olarak görünsün?")
+        self.editBottomMinCharCount.setToolTip("Kameranın alt kısmında görünen plakalardan, kaç karakterden uzun olanlar Log olarak görünsün?")
         self.editControlCount.setToolTip("Kamerada görünen plaka veritabanına kaydedilmeden önce kaç kez kontrol edilsin?")
         try:
             self.setWindowIcon(QIcon(str(path) + "vagonplaka.png"))

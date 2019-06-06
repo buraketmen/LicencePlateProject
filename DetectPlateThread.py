@@ -25,7 +25,7 @@ path = str(path)
         return False"""
 
 def GetPing(ip):
-    response = ping(ip, size=5, count=2)
+    response = ping(ip, size=5, count=1)
     if(str(response)[0:7]=="Request"):
         return False
     else:

@@ -67,7 +67,7 @@ def setDatabase():
                 LogId INTEGER PRIMARY KEY,
                 Plate TEXT,
                 Date TEXT,
-                Time TEXT
+                Time TEXT, 
                 Camera TEXT)
                 """)
 
