@@ -136,10 +136,11 @@ class MainWithGui(QMainWindow,Ui_MainWindow):
             self.AddPlateInfo.editBottomMinCharCount.setText(counts[3])
             self.AddPlateInfo.editControlCount.setText(counts[4])
         except:
-            plateinfo = open("PlateInfo.txt", "w")
-            plateinfo.write("8,6,12,10,6")
-            plateinfo = open("PlateInfo.txt", "r")
-            line = str(plateinfo.readline())
+            plateInfo = open("PlateInfo.txt", "w")
+            plateInfo.write("8,6,12,10,6")
+            plateInfo.close()
+            plateInfoRead = open("PlateInfo.txt", "r")
+            line = str(plateInfoRead.readline())
             counts = line.split(",")
             self.AddPlateInfo.editTopCharCount.setText(counts[0])
             self.AddPlateInfo.editTopMinCharCount.setText(counts[1])
@@ -595,7 +596,7 @@ class Cameras(QDialog,Ui_Dialog):
         self.updateCameraPage = UpdateCamera()
         self.buttonUpdateCamera.setEnabled(False)
         self.buttonDeleteCamera.setEnabled(False)
-        self.updateCameraPage.buttonShowCounters.clicked.connect(self.Counters)
+        self.updateCameraPage.buttonShowContours.clicked.connect(self.Contours)
         self.updateCameraPage.buttonSaveConfiguration.clicked.connect(self.UpdateCamera)
         regexint = QRegExp("[0-9_]+")
         regexip = QRegExp("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")
@@ -709,7 +710,7 @@ class Cameras(QDialog,Ui_Dialog):
                                 "Eklenmek istenen bilgileri kontrol ediniz!\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
-    def CounterSize(self,topYOne,topYTwo,bottomYOne,bottomYTwo):
+    def ContourSize(self,topYOne,topYTwo,bottomYOne,bottomYTwo):
         if (int(topYOne) < 0):
             topYOne = 0
         if (int(topYOne) > 480):
@@ -728,7 +729,7 @@ class Cameras(QDialog,Ui_Dialog):
             bottomYTwo = 480
         return topYOne,topYTwo,bottomYOne,bottomYTwo
 
-    def Counters(self):
+    def Contours(self):
         cameraIP = self.updateCameraPage.editCameraIP.text()
         cameraIPAddition = self.updateCameraPage.editCameraIPAddition.text()
         username = self.updateCameraPage.editUsername.text()
@@ -737,7 +738,7 @@ class Cameras(QDialog,Ui_Dialog):
         topYTwo = self.updateCameraPage.editTopY2.text()
         bottomYOne = self.updateCameraPage.editBottomY1.text()
         bottomYTwo = self.updateCameraPage.editBottomY2.text()
-        topYOne, topYTwo, bottomYOne, bottomYTwo =self.CounterSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
+        topYOne, topYTwo, bottomYOne, bottomYTwo =self.ContourSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
         protocolType = "rtsp"
         if (self.updateCameraPage.radioButtonRtsp.isChecked() == True):
             protocolType = "rtsp"
@@ -757,23 +758,23 @@ class Cameras(QDialog,Ui_Dialog):
             screenshot = capture.read()
             capture.stream.stream.release()
             if (screenshot != None):
-                img = self.ShowCounters(screenshot, topYOne, topYTwo, bottomYOne, bottomYTwo)
+                img = self.ShowContours(screenshot, topYOne, topYTwo, bottomYOne, bottomYTwo)
                 self.DisplayPhoto(img)
                 screenshot = None
             else:
                 self.DisplayPhoto(self.backimage)
-                self.updateCameraPage.buttonShowCounters.setEnabled(False)
+                self.updateCameraPage.buttonShowContours.setEnabled(False)
                 QMessageBox.warning(self.updateCameraPage, 'Kamera Hatası!',
                                     "Ulaşılmak istenen kameraya erişim sağlanamadı. Lütfen bilgileri kontrol ediniz!\n" + "IP: " + ip + "\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.DisplayPhoto(self.backimage)
-            self.updateCameraPage.buttonShowCounters.setEnabled(False)
+            self.updateCameraPage.buttonShowContours.setEnabled(False)
             QMessageBox.warning(self.updateCameraPage, 'Kamera Hatası!',
                                 "Ulaşılmak istenen kameraya erişim sağlanamadı. Lütfen bilgileri kontrol ediniz!\n" + "IP: " + ip + "\n",
                                 QMessageBox.Ok, QMessageBox.Ok)
 
-    def ShowCounters(self,img,topyone,topytwo,bottomyone,bottomytwo):
+    def ShowContours(self,img,topyone,topytwo,bottomyone,bottomytwo):
         cv2.rectangle(img, (0, int(topyone)), (640, int(topytwo)), (255, 0, 0), 2)
         cv2.rectangle(img, (0, int(bottomyone)), (640, int(bottomytwo)), (0, 0, 255), 2)
         return img
@@ -843,7 +844,7 @@ class Cameras(QDialog,Ui_Dialog):
                     self.GetFrameFromCamera(cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo)
                 if(cameraStatus=="Çalışmıyor"):
                     self.updateCameraPage.radioButtonNotWorking.setChecked(True)
-                    self.updateCameraPage.buttonShowCounters.setEnabled(False)
+                    self.updateCameraPage.buttonShowContours.setEnabled(False)
 
     def UpdateCamera(self):
         countDot = 0
@@ -869,7 +870,7 @@ class Cameras(QDialog,Ui_Dialog):
         bottomYOne = self.updateCameraPage.editBottomY1.text()
         bottomYTwo = self.updateCameraPage.editBottomY2.text()
         if(len(topYOne)!=0 and len(topYTwo)!=0 and len(bottomYOne)!=0 and len(bottomYTwo)!=0):
-            topYOne, topYTwo, bottomYOne, bottomYTwo = self.CounterSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
+            topYOne, topYTwo, bottomYOne, bottomYTwo = self.ContourSize(topYOne, topYTwo, bottomYOne, bottomYTwo)
             protocolType = "rtsp"
             cameraStatus = "Çalışmıyor"
             if (self.updateCameraPage.radioButtonRtsp.isChecked() == True):
@@ -1052,14 +1053,17 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
         if buttonReply == QMessageBox.Yes:
             curs.execute("DELETE FROM Fonts WHERE FontName=?", (fontName,))
             conn.commit()
-            fontStatus = open("FontStatus.txt", "r")
-            direc = path + "Fonts\\" + str(fontName)
-            if (str(fontStatus.readline()) == direc):
-                txtfile = open("FontStatus.txt", "w")
-                txtfile.write(path + "Fonts")
-                txtfile.close()
-            shutil.rmtree(direc, ignore_errors=True)
-            self.LoadFontDatabase()
+            try:
+                fontStatus = open("FontStatus.txt", "r")
+                direc = path + "Fonts\\" + str(fontName)
+                if (str(fontStatus.readline()) == direc):
+                    txtfile = open("FontStatus.txt", "w")
+                    txtfile.write(path + "Fonts")
+                    txtfile.close()
+                shutil.rmtree(direc, ignore_errors=True)
+                self.LoadFontDatabase()
+            except:
+                self.LoadFontDatabase()
         else:
             self.LoadFontDatabase()
         self.show()

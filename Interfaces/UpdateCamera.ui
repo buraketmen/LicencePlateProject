@@ -233,10 +233,10 @@
     <string/>
    </property>
   </widget>
-  <widget class="QPushButton" name="buttonShowCounters">
+  <widget class="QPushButton" name="buttonShowContours">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>160</x>
      <y>710</y>
      <width>261</width>
      <height>51</height>

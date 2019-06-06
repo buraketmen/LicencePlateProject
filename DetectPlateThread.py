@@ -133,7 +133,7 @@ class camThread(threading.Thread):
                             if (self.checkBottom == controlCount):
                                 self.AddPlateDatabase(licPlateBottom.strChars, licPlateBottom.imgThresh)
                             self.checkPlateBottom = licPlateBottom.strChars
-                time.sleep(1)
+                time.sleep(5)
 
     def getDateAndTime(self):
         an = datetime.datetime.now()
