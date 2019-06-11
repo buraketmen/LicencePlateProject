@@ -354,8 +354,6 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
 
     def StartWebcam(self):
         try:
-            # self.capture = cv2.VideoCapture('rtsp://root:root@192.168.10.34/axis-media/media.amp')
-            # self.capture2 = VideoStream(src='rtsp://root:root@192.168.10.49/axis-media/media.amp')
             ip, cameraIP, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo = self.getIP()
             if (len(cameraName) != 0):
                 if (GetPing(cameraIP)):
