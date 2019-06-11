@@ -5,8 +5,9 @@ import math
 import random
 import Preprocess
 import PossibleChar
+import sqlite3
 
-path = os.getcwd() + "/"
+path = os.getcwd() + "\\"
 path = str(path)
 
 kNearest = cv2.ml.KNearest_create()
@@ -16,11 +17,11 @@ SCALAR_YELLOW = (0.0, 255.0, 255.0)
 SCALAR_GREEN = (0.0, 255.0, 0.0)
 SCALAR_RED = (0.0, 0.0, 255.0)
 #checkIfPossibleChar için sabitler, bu yalnızca olası bir karakteri kontrol eder (başka bir karakterle karşılaştırılmaz)
-MIN_PIXEL_WIDTH = 2
+MIN_PIXEL_WIDTH = 1
 MIN_PIXEL_HEIGHT = 8
-MIN_PIXEL_AREA = 60
-MIN_ASPECT_RATIO = 0.25
-MAX_ASPECT_RATIO = 1.00
+MIN_PIXEL_AREA = 30
+MIN_ASPECT_RATIO = 0.1
+MAX_ASPECT_RATIO = 1.5
 # İki karakterin karşılaştırılması için sabitler
 MIN_DIAG_SIZE_MULTIPLE_AWAY = 0.3
 MAX_DIAG_SIZE_MULTIPLE_AWAY = 8.0
@@ -29,8 +30,6 @@ MAX_CHANGE_IN_AREA = 0.5
 MAX_CHANGE_IN_WIDTH = 0.8
 MAX_CHANGE_IN_HEIGHT = 0.2
 MAX_ANGLE_BETWEEN_CHARS = 12.0
-#MAX_ANGLE_BETWEEN_CHARS = 10.0 #en iyisi, 12 yapılabilir
-# Diğer sabitlemeler
 MIN_NUMBER_OF_MATCHING_CHARS =8
 RESIZED_CHAR_IMAGE_WIDTH = 20
 RESIZED_CHAR_IMAGE_HEIGHT = 30
@@ -45,14 +44,28 @@ def loadKNNDataAndTrainKNN():
         npaClassifications = np.loadtxt(direc + "classifications.txt", np.float32)     # Eğitim sınıflandırmalarından okuma
         npaFlattenedImages = np.loadtxt(direc + "flattened_images.txt", np.float32)  # Eğitim resimlerini okuma
     except:                                                                    # Eğer dosya açılamadıysa
-        pass
+        direc = path+ "Fonts\\"
+        npaClassifications = np.loadtxt(direc + "classifications.txt", np.float32)  # Eğitim sınıflandırmalarından okuma
+        npaFlattenedImages = np.loadtxt(direc + "flattened_images.txt", np.float32)  # Eğitim resimlerini okuma
+
     npaClassifications = npaClassifications.reshape((npaClassifications.size, 1))       # Numpy dizisini 1 boyutlu hale getirme
     kNearest.setDefaultK(1)                                                             # K'yı varsayılan olarak 1 yapma
     kNearest.train(npaFlattenedImages, cv2.ml.ROW_SAMPLE, npaClassifications)           # KNN nesnelerini eğitme
-
     return True  #Eğer buraya gelirsek eğitim başarılı olmuştur
 
 def infoFromDatabase(cameraName):
+    global MIN_PIXEL_WIDTH
+    global MIN_PIXEL_HEIGHT
+    global MIN_PIXEL_AREA
+    global MIN_ASPECT_RATIO
+    global MAX_ASPECT_RATIO
+    global MIN_DIAG_SIZE_MULTIPLE_AWAY
+    global MAX_DIAG_SIZE_MULTIPLE_AWAY
+    global MAX_CHANGE_IN_AREA
+    global MAX_CHANGE_IN_WIDTH
+    global MAX_CHANGE_IN_HEIGHT
+    global MAX_ANGLE_BETWEEN_CHARS
+    global MIN_NUMBER_OF_MATCHING_CHARS
     conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
     curs = conn.cursor()
     searchall = curs.execute("""SELECT MinPixelWidth ,
@@ -82,6 +95,7 @@ def infoFromDatabase(cameraName):
         MAX_ANGLE_BETWEEN_CHARS = float(row[10])
         MIN_NUMBER_OF_MATCHING_CHARS = int(row[11])
 
+
 def detectCharsInPlates(listOfPossiblePlates,type,cameraName):
     infoFromDatabase(cameraName)
     intPlateCounter = 0
@@ -95,7 +109,7 @@ def detectCharsInPlates(listOfPossiblePlates,type,cameraName):
     for possiblePlate in listOfPossiblePlates:          # Her olası plaka için for döngüsü
         possiblePlate.imgGrayscale, possiblePlate.imgThresh = Preprocess.preprocess(possiblePlate.imgPlate, type)     # Gri tonlamalı ve threshold görüntüler elde etmek için önişlem
         # Daha kolay görüntüleme ve karakter algılama için plaka görüntüsünün boyutunu arttırır
-        possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx = 1.5, fy = 1.5)
+        #possiblePlate.imgThresh = cv2.resize(possiblePlate.imgThresh, (0, 0), fx = 1.5, fy = 1.5)
         #Gri alanları gidermek için tekrar threshold
         thresholdValue, possiblePlate.imgThresh = cv2.threshold(possiblePlate.imgThresh, 0.0, 255.0, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 

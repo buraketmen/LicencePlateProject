@@ -6,29 +6,33 @@ import Preprocess
 import DetectChars
 import PossiblePlate
 import PossibleChar
+import time
 
-PLATE_WIDTH_PADDING_FACTOR = 1.1
+# Sabit değişkenler ##########################################################################
+PLATE_WIDTH_PADDING_FACTOR = 1.11
 PLATE_HEIGHT_PADDING_FACTOR = 1.3
 SCALAR_BLACK = (0.0, 0.0, 0.0)
 SCALAR_WHITE = (255.0, 255.0, 255.0)
 SCALAR_YELLOW = (0.0, 255.0, 255.0)
 SCALAR_GREEN = (0.0, 255.0, 0.0)
 SCALAR_RED = (0.0, 0.0, 255.0)
-
+###################################################################################################
 def detectPlatesInScene(imgOriginalScene,type):
     listOfPossiblePlates = []     # Dönüş değeri olacak
     height, width, numChannels = imgOriginalScene.shape
     imgGrayscaleScene = np.zeros((height, width, 1), np.uint8) #matris olusturma
     imgThreshScene = np.zeros((height, width, 1), np.uint8)
     imgContours = np.zeros((height, width, 3), np.uint8)
+
     imgGrayscaleScene, imgThreshScene = Preprocess.preprocess(imgOriginalScene,type)  # Gri tonlamalı ve eşikli görüntüler elde etmek için ön işlem
     # Sahnedeki tüm olası karakterleri bul
     # Bu işlev ilk önce tüm konturları bulur, ardından sadece karakter olabilecek kontürleri içerir (henüz diğer karakterlerle karşılaştırılmadan)
-    listOfPossibleCharsInScene = findPossibleCharsInScene(imgThreshScene)
 
+    listOfPossibleCharsInScene = findPossibleCharsInScene(imgThreshScene)
     # Olası tüm karakterlerin bir listesi verildiğinde eşleşen karakter gruplarını bulun
     # Sonraki adımlarda, eşleşen her karakter grubu bir plaka olarak tanınmaya çalışacaktır
     listOfListsOfMatchingCharsInScene = DetectChars.findListOfListsOfMatchingChars(listOfPossibleCharsInScene)
+
 
     for listOfMatchingChars in listOfListsOfMatchingCharsInScene:             # Eşleşen karakter grubunun her biri için
         possiblePlate = extractPlate(imgOriginalScene, listOfMatchingChars)   # Plaka çıkarma girişimi
@@ -36,11 +40,13 @@ def detectPlatesInScene(imgOriginalScene,type):
             listOfPossiblePlates.append(possiblePlate)  # Olası plakalar listesine ekle
     return listOfPossiblePlates
 
+###################################################################################################
 def findPossibleCharsInScene(imgThresh):
     listOfPossibleChars = []  #Dönüş değeri olacak
     intCountOfPossibleChars = 0
     imgThreshCopy = imgThresh.copy()
     contours, npaHierarchy = cv2.findContours(imgThreshCopy, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)  # Tüm kontürleri bul SIMPLE ile 4 kontür bulunur
+
     height, width = imgThresh.shape
     imgContours = np.zeros((height, width, 3), np.uint8)
     for i in range(0, len(contours)):    # Her bir kontür için
@@ -50,6 +56,7 @@ def findPossibleCharsInScene(imgThresh):
             listOfPossibleChars.append(possibleChar)              # Olası listeye ekle
     return listOfPossibleChars
 
+###################################################################################################
 def extractPlate(imgOriginal, listOfMatchingChars):
     possiblePlate = PossiblePlate.PossiblePlate()    # Dönüş değeri olacak
 

@@ -9,6 +9,7 @@ import DetectPlates
 import cv2
 import os
 import time
+import multiprocessing
 from pythonping import ping
 
 conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
@@ -16,13 +17,6 @@ curs = conn.cursor()
 path = os.getcwd() + "\\"
 path = str(path)
 
-"""def GetResponse(ip):
-    hostname = ip
-    response = os.system("ping -c 1 " + hostname)
-    if response == 0:
-        return True
-    else:
-        return False"""
 
 def GetPing(ip):
     response = ping(ip, size=5, count=1)
@@ -37,7 +31,8 @@ class camThread(threading.Thread):
         self.cameraName = cameraName
         self.frameStatus = True
         self.image = None
-        frameSize = (640, 480)
+        self.capture = None
+        self.frameSize = (640, 480)
         searchall = curs.execute("""SELECT CameraIP, CameraIPAddition, Username, Password, ProtocolType,TopYOne, TopYTwo,
         BottomYOne, BottomYTwo FROM Cameras WHERE CameraName = ? """,(self.cameraName,))
         rows = searchall.fetchall()
@@ -56,11 +51,9 @@ class camThread(threading.Thread):
         else:
             self.ip = self.protocolType + "://" + self.cameraIP + "/" + self.cameraIPAddition
         if (GetPing(self.cameraIP)):
-            self.capture = VideoStream(src=self.ip, resolution=frameSize)
-            self.image = self.capture.read()
+            self.capture = VideoStream(src=self.ip, resolution=self.frameSize)
+            self.capture.start()
         else:
-            self.frameStatus = False
-        if (self.image==None):
             self.frameStatus = False
         self.stopped = False
         self.checkTop = 0
@@ -70,70 +63,70 @@ class camThread(threading.Thread):
 
     def run(self):
         while True:
+            ThreadStatus = open("ThreadStatus.txt", "r")
             if (self.frameStatus == False):
                 break
-            ThreadStatus = open("ThreadStatus.txt", "r")
             if (str(ThreadStatus.readline()) == "False"):
                 break
-            img = self.capture.read()
-            if (len(img) != 0):
-                try:
-                    plateinfo = open("PlateInfo.txt", "r")
-                    line = str(plateinfo.readline())
-                    counts = line.split(",")
-                    topCharCount = int(counts[0])
-                    topMinCharCount = int(counts[1])
-                    bottomCharCount = int(counts[2])
-                    bottomMinCharCount = int(counts[3])
-                    controlCount = int(counts[4])
-                except:
-                    topCharCount = 8
-                    topMinCharCount = 5
-                    bottomCharCount = 12
-                    bottomMinCharCount = 10
-                    controlCount = 5
+            self.image= self.capture.read()
+            try:
+                plateinfo = open("PlateInfo.txt", "r")
+                line = str(plateinfo.readline())
+                counts = line.split(",")
+                topCharCount = int(counts[0])
+                topMinCharCount = int(counts[1])
+                bottomCharCount = int(counts[2])
+                bottomMinCharCount = int(counts[3])
+                controlCount = int(counts[4])
+            except:
+                topCharCount = 8
+                topMinCharCount = 5
+                bottomCharCount = 12
+                bottomMinCharCount = 10
+                controlCount = 5
 
-                imgtop = img[self.topYOne:self.topYTwo, 0:640]
-                imgbottom = img[self.bottomYOne:self.bottomYTwo, 0:640]
+            imgtop = self.image[self.topYOne:self.topYTwo, 0:640]
+            imgbottom = self.image[self.bottomYOne:self.bottomYTwo, 0:640]
 
-                listOfPossiblePlatesBottom = DetectPlates.detectPlatesInScene(imgbottom, 1)
-                listOfPossiblePlatesBottom = DetectChars.detectCharsInPlates(listOfPossiblePlatesBottom, 1,
-                                                                             self.cameraName)
-                listOfPossiblePlatesTop = DetectPlates.detectPlatesInScene(imgtop, 2)  # Plakaları tespit et
+            listOfPossiblePlatesTop = DetectPlates.detectPlatesInScene(imgtop, 2)  # Plakaları tespit et
+            listOfPossiblePlatesBottom = DetectPlates.detectPlatesInScene(imgbottom, 1)
+
+
+            if (len(listOfPossiblePlatesTop) != 0):
+                # Eğer program buraya geldiyse en azından bir plaka okunmuştur
+                # Olası plakaların listesini DESCENDING sıralamasına göre sırala (Çok karakterden az karaktere)
                 listOfPossiblePlatesTop = DetectChars.detectCharsInPlates(listOfPossiblePlatesTop, 2,
                                                                           self.cameraName)
-                if (len(listOfPossiblePlatesTop) != 0):
-                    # Eğer program buraya geldiyse en azından bir plaka okunmuştur
-                    # Olası plakaların listesini DESCENDING sıralamasına göre sırala (Çok karakterden az karaktere)
-                    listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars),
-                                                 reverse=True)
-                    licPlateTop = listOfPossiblePlatesTop[0]
-                    if (len(licPlateTop.strChars) >= topMinCharCount):
-                        self.AddLogDatabase(licPlateBottom.strChars)
-                    if (len(licPlateTop.strChars) == topCharCount):
-                        if (self.checkPlateTop == licPlateTop.strChars):
-                            self.checkTop += 1
-                        else:
-                            self.checkTop = 0
-                        if (self.checkTop == controlCount):
-                            self.AddPlateDatabase(licPlateTop.strChars, licPlateTop.imgThresh)
-                        self.checkPlateTop = licPlateTop.strChars
-                    if (len(listOfPossiblePlatesBottom) != 0):
-                        listOfPossiblePlatesBottom.sort(key=lambda possiblePlate: len(possiblePlate.strChars),
-                                                        reverse=True)
-                        # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
-                        licPlateBottom = listOfPossiblePlatesBottom[0]
-                        if (len(licPlateBottom.strChars) >= bottomMinCharCount):
-                            self.AddLogDatabase(licPlateBottom.strChars)
-                        if (len(licPlateBottom.strChars) == bottomCharCount):
-                            if (self.checkPlateBottom == licPlateBottom.strChars):
-                                self.checkBottom += 1
-                            else:
-                                self.checkBottom = 0
-                            if (self.checkBottom == controlCount):
-                                self.AddPlateDatabase(licPlateBottom.strChars, licPlateBottom.imgThresh)
-                            self.checkPlateBottom = licPlateBottom.strChars
-                time.sleep(5)
+                listOfPossiblePlatesTop.sort(key=lambda possiblePlate: len(possiblePlate.strChars), reverse=True)
+                licPlateTop = listOfPossiblePlatesTop[0]
+                if (len(licPlateTop.strChars) >= topMinCharCount):
+                    self.AddLogDatabase(licPlateTop.strChars)
+                if (len(licPlateTop.strChars) == topCharCount):
+                    if (self.checkPlateTop == licPlateTop.strChars):
+                        self.checkTop += 1
+                    else:
+                        self.checkTop = 0
+                    if (self.checkTop == controlCount):
+                        self.AddPlateDatabase(licPlateTop.strChars, licPlateTop.imgThresh)
+                    self.checkPlateTop = licPlateTop.strChars
+            if (len(listOfPossiblePlatesBottom) != 0):
+                listOfPossiblePlatesBottom = DetectChars.detectCharsInPlates(listOfPossiblePlatesBottom, 1,
+                                                                             self.cameraName)
+                listOfPossiblePlatesBottom.sort(key=lambda possiblePlate: len(possiblePlate.strChars),
+                                                reverse=True)
+                # Tanınmış karakterlere sahip plakanın (dize uzunluğu azalan şekilde ilk plaka) gerçek olduğunu varsay
+                licPlateBottom = listOfPossiblePlatesBottom[0]
+                if (len(licPlateBottom.strChars) >= bottomMinCharCount):
+                    self.AddLogDatabase(licPlateBottom.strChars)
+                if (len(licPlateBottom.strChars) == bottomCharCount):
+                    if (self.checkPlateBottom == licPlateBottom.strChars):
+                        self.checkBottom += 1
+                    else:
+                        self.checkBottom = 0
+                    if (self.checkBottom == controlCount):
+                        self.AddPlateDatabase(licPlateBottom.strChars, licPlateBottom.imgThresh)
+                    self.checkPlateBottom = licPlateBottom.strChars
+            time.sleep(1)
 
     def getDateAndTime(self):
         an = datetime.datetime.now()
@@ -158,10 +151,6 @@ class camThread(threading.Thread):
             for row in rows:
                 i = i + 1
         if (i == 0):
-            try:
-                cv2.imwrite(path + "PlatePhotos\\Thresh_{}_{}_{}.png".format(plate, date, time), imgThresh)
-            except:
-                pass
             curs.execute("INSERT INTO Plates (Plate,Date,Time,Camera) VALUES(?,?,?,?)",
                          (plate, date, time, self.cameraName))
             conn.commit()

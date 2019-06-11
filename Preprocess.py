@@ -4,7 +4,8 @@ import math
 
 GAUSSIAN_SMOOTH_FILTER_SIZE = (5, 5)
 ADAPTIVE_THRESH_BLOCK_SIZE = 11
-ADAPTIVE_THRESH_WEIGHT = 2
+ADAPTIVE_THRESH_WEIGHT_BOTTOM= 12
+ADAPTIVE_THRESH_WEIGHT_TOP = 8
 
 def preprocess(imgOriginal,type):
     imgGrayscale = extractValue(imgOriginal)
@@ -12,10 +13,13 @@ def preprocess(imgOriginal,type):
     height, width = imgGrayscale.shape
     imgBlurred = np.zeros((height, width, 1), np.uint8)
     imgBlurred = cv2.GaussianBlur(imgMaxContrastGrayscale, GAUSSIAN_SMOOTH_FILTER_SIZE, 0)
-    imgThresh = cv2.adaptiveThreshold(imgBlurred, 255.0, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, ADAPTIVE_THRESH_BLOCK_SIZE, ADAPTIVE_THRESH_WEIGHT)
-    ret, imgThresh = cv2.threshold(imgThresh, 0, 255, cv2.THRESH_OTSU) #çıkarılabilir, deneme aşamasında
+    if(type==1):
+        imgThresh = cv2.adaptiveThreshold(imgBlurred, 255.0, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, ADAPTIVE_THRESH_BLOCK_SIZE, ADAPTIVE_THRESH_WEIGHT_BOTTOM)
+        ret, imgThresh = cv2.threshold(imgThresh, 0, 255, cv2.THRESH_OTSU) #çıkarılabilir, deneme aşamasında
     if(type==2):
-        imgThresh = cv2.bitwise_not(imgThresh)
+        imgThresh = cv2.adaptiveThreshold(imgBlurred, 255.0, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
+                                          ADAPTIVE_THRESH_BLOCK_SIZE, ADAPTIVE_THRESH_WEIGHT_TOP)
+        ret, imgThresh = cv2.threshold(imgThresh, 0, 255, cv2.THRESH_OTSU)
     return imgGrayscale, imgThresh
 
 def extractValue(imgOriginal):
