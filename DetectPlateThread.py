@@ -10,6 +10,7 @@ import cv2
 import os
 import time
 import multiprocessing
+import requests
 from pythonping import ping
 
 conn = sqlite3.connect('PlateDetectionDB.db', check_same_thread=False)
@@ -19,7 +20,7 @@ path = str(path)
 
 
 def GetPing(ip):
-    response = ping(ip, size=5, count=1)
+    response = ping(ip, size=32, count=1)
     if(str(response)[0:7]=="Request"):
         return False
     else:
@@ -63,6 +64,7 @@ class camThread(threading.Thread):
 
     def run(self):
         while True:
+            startTime = int(time.time())
             ThreadStatus = open("ThreadStatus.txt", "r")
             if (self.frameStatus == False):
                 break
@@ -126,14 +128,16 @@ class camThread(threading.Thread):
                     if (self.checkBottom == controlCount):
                         self.AddPlateDatabase(licPlateBottom.strChars, licPlateBottom.imgThresh)
                     self.checkPlateBottom = licPlateBottom.strChars
-            time.sleep(1)
+            lastTime = int(time.time())
+            if(startTime==lastTime):
+                time.sleep(1)
 
     def getDateAndTime(self):
         an = datetime.datetime.now()
         second = int(an.second)
         hour = int(an.hour)
         date = str(an.day) + "." + str(an.month) + "." + str(an.year)
-        time = str(an.hour) + "." + str(an.minute) + "." + str(an.second)
+        time = str(an.hour) + ":" + str(an.minute) + ":" + str(an.second)
         return date, time
 
     def AddLogDatabase(self,plate):
@@ -144,6 +148,7 @@ class camThread(threading.Thread):
 
     def AddPlateDatabase(self, plate, imgThresh):
         date, time = self.getDateAndTime()
+        sent = "Hayır"
         searchall = curs.execute('SELECT Plate FROM Plates WHERE Plate = ? AND Camera =?', (plate, self.cameraName,))
         rows = searchall.fetchall()
         i = 0
@@ -151,7 +156,10 @@ class camThread(threading.Thread):
             for row in rows:
                 i = i + 1
         if (i == 0):
-            curs.execute("INSERT INTO Plates (Plate,Date,Time,Camera) VALUES(?,?,?,?)",
-                         (plate, date, time, self.cameraName))
+            curs.execute("INSERT INTO Plates (Plate,Date,Time,Camera,Sent) VALUES(?,?,?,?,?)",
+                         (plate, date, time, self.cameraName, sent))
             conn.commit()
+
+
+
 

@@ -28,7 +28,8 @@ import sqlite3
 import DetectPlateThread
 import threading
 import multiprocessing
-import time
+import time as t
+import requests
 from pythonping import ping
 
 locale.setlocale(locale.LC_ALL, '')
@@ -48,9 +49,9 @@ def GetPing(ip):
             return True
     except Exception as error:
         date = GetDate()
-        filename = path + "Log\\" + date + "\n"
+        filename = path + "Log\\" + date
         logToday = open(filename, "a+")
-        logToday.write(str(error))
+        logToday.write(str(error)+ "\n")
         logToday.close()
 
 def GetDate():
@@ -76,7 +77,6 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
         self.cameraStatus = False
         self.checkTop = 0
         self.checkBottom = 0
-
         self.backimage = cv2.imread(path + '\\Fonts\\background.png')
         self.listCamera = []
         self.InitUi()
@@ -89,11 +89,14 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
         comboboxThread.daemon = True
         comboboxThread.start()
 
-        #databaseThread = threading.Thread(target=self.LoadDatabase)
-        #databaseThread.daemon = True
-        #databaseThread.start()
-        txtfile = open("ThreadStatus.txt", "w")
-        txtfile.write("True")
+        cloudDBThread = threading.Thread(target= self.SendToCloud)
+        cloudDBThread.daemon = True
+        cloudDBThread.start()
+
+        #conn.execute("DELETE FROM Plates")
+        #conn.commit()
+        #txtfile = open("ThreadStatus.txt", "w")
+        #txtfile.write("True")
         self.LoadDatabase()
         self.startButton.clicked.connect(self.StartWebcam)
         self.startButton.setEnabled(True)
@@ -114,6 +117,46 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
 
     def LoadDatabaseTable(self):
         self.LoadDatabase()
+
+    def SendToCloud(self):
+        while True:
+            sent = "Hayır"
+            searchall = conn.execute("SELECT Plate, Date, Time, Camera FROM Plates WHERE Sent =? ", (sent,))
+            rows = searchall.fetchall()
+            if (rows != None):
+                for row in rows:
+                    plate = str(row[0])
+                    date = str(row[1])
+                    fulltime = str(row[2])
+                    timelist = fulltime.split(":")
+                    time = timelist[0] + ":" + timelist[1]
+                    camera = str(row[3])
+                    search = conn.execute('SELECT CameraLocation FROM Cameras WHERE CameraName = ? ', (camera,))
+                    result = search.fetchone()
+                    if (result != None):
+                        location = str(result[0])
+
+                    
+                    postUrl = "http://localhost:64738/api/v1/Plates/CreatePlate"
+                    hed = {'Authorization': 'Bearer ' + token}
+                    try:
+                        response = requests.post(postUrl, timeout=5, json={"plate": str(plate),
+                                                                           "camera": str(camera), "date": str(date),
+                                                                           "time": str(time),
+                                                                           "location": str(location)}, headers=hed)
+                        r = response.json()
+                        stringR = str(r)
+                        if (stringR[14:18] == "True"):
+                            print("aaa")
+                            sent = "Evet"
+                            conn.execute(
+                                """UPDATE Plates SET Plate = ?, Date = ? , Time = ?, Camera = ? , Sent = ? WHERE Plate = ?""",
+                                (plate, date, fulltime, camera, sent, plate))
+                            conn.commit()
+                    except:
+                        pass
+            t.sleep(5)
+
 
     def UpdateStatusBar(self):
         self.statusbar.show()
@@ -144,12 +187,12 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                             self.ComboBoxCameras.addItems(self.listCamera)
                     else:
                         self.ComboBoxCameras.clear()
-                    time.sleep(10)
+                    t.sleep(10)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error)+ "\n")
             logToday.close()
 
 
@@ -247,9 +290,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                                     QMessageBox.Ok, QMessageBox.Ok)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
 
@@ -270,9 +313,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                 self.fname = None
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
             self.fname = None
             self.fontPhoto = None
@@ -307,9 +350,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                 self.plateEnabled = False
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def getIP(self):
@@ -347,9 +390,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                 return ip, cameraIP, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def StartWebcam(self):
@@ -359,14 +402,8 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                 if (GetPing(cameraIP)):
                     self.cameraStatus = True
                     self.ComboBoxCameras.setEnabled(False)
-                    curs.execute("DELETE FROM Log")
-                    conn.commit()
-                    #self.StartIPCamera(ip, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo)
 
-                    camera = threading.Thread(target=self.StartIPCamera, args=(ip,cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo,))
-                    camera.daemon = True
-                    camera.start()
-
+                    self.StartIPCamera(ip, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo)
                 else:
                     QMessageBox.warning(self, 'Kamera Hatası',
                                         "Kameraya ulaşılamadı. Lütfen kamera bilgilerini kontrol ediniz!\n",
@@ -377,9 +414,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                                         QMessageBox.Ok, QMessageBox.Ok)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def StartIPCamera(self, ip, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo):
@@ -387,6 +424,8 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
             global frameSize
             self.startButton.setEnabled(False)
             self.stopButton.setEnabled(True)
+            curs.execute("DELETE FROM Log")
+            conn.commit()
             self.capture = VideoStream(src=ip, resolution=frameSize)
             self.capture.start()
             timercallback = functools.partial(self.UpdateFrame, cameraName=cameraName, topYOne=topYOne, topYTwo=topYTwo,
@@ -394,12 +433,31 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
             self.timer = QTimer(self)
             self.timer.timeout.connect(timercallback)
             self.timer.start(1)
+
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
+
+    """def UpdateFrame(self, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo):
+        try:
+            while True:
+                t.sleep(0.11)
+                if (self.cameraStatus == False):
+                    break
+                self.image = self.capture.read()
+                self.image = self.MergeRecAndImage(self.image, topYOne, topYTwo, bottomYOne, bottomYTwo)
+                self.DisplayImage(self.image)
+                if (cameraName != None and len(cameraName) != 0):
+                    self.LoadLogs(cameraName)
+        except Exception as error:
+            date = GetDate()
+            filename = path + "Log\\" + date
+            logToday = open(filename, "a+")
+            logToday.write(str(error) + "\n")
+            logToday.close()"""
 
     def UpdateFrame(self, cameraName, topYOne, topYTwo, bottomYOne, bottomYTwo):
         try:
@@ -413,9 +471,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
                 self.DisplayImage(self.backimage)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def MergeRecAndImage(self,image,topYOne, topYTwo, bottomYOne, bottomYTwo):
@@ -425,9 +483,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
             return image
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def StopWebcam(self):
@@ -445,15 +503,14 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
         blnKNNTrainingSuccessful = DetectChars.loadKNNDataAndTrainKNN()  # KNN eğitimi
         if blnKNNTrainingSuccessful == False:  # Eğer KNN eğitimi başarılı değilse
             QMessageBox.warning(self, 'KNN Taraması',
-                                    "KNN dosya taraması yapılamadı!\n",
-                                    QMessageBox.Ok, QMessageBox.Ok)
+                                "KNN dosya taraması yapılamadı!\n",
+                                QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.plateTrain = True
+            self.detectButton.setEnabled(True)
             QMessageBox.information(self, 'KNN Taraması',
                                     "KNN dosyası başarıyla tarandı!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
-
-            self.detectButton.setEnabled(True)
 
     def StartRecording(self):
         try:
@@ -555,9 +612,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
 
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def GetCharInfo(self):
@@ -582,11 +639,10 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
             self.DisplayPhoto(self.fontPhoto, "Font")
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
-
     def CountofLetter(self,text,let):
         count = 0
         for letter in text:
@@ -595,63 +651,79 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
         return count
 
     def AddCamera(self):
-        cameraName = self.addCameraPage.editCameraName.text()
-        cameraIP = self.addCameraPage.editCameraIP.text()
-        cameraIPAddition = self.addCameraPage.editCameraIPAddition.text()
-        username = self.addCameraPage.editUsername.text()
-        password = self.addCameraPage.editPassword.text()
-        protocolType = "rtsp"
-        minPixelWidth = Database.MIN_PIXEL_WIDTH
-        minPixelHeight = Database.MIN_PIXEL_HEIGHT
-        minPixelArea = Database.MIN_PIXEL_AREA
-        minPixelRatio = Database.MIN_ASPECT_RATIO
-        maxPixelRatio = Database.MAX_ASPECT_RATIO
-        minDiagSize = Database.MIN_DIAG_SIZE_MULTIPLE_AWAY
-        maxDiagSize = Database.MAX_DIAG_SIZE_MULTIPLE_AWAY
-        maxChangeInArea = Database.MAX_CHANGE_IN_AREA
-        maxChangeInWidth = Database.MAX_CHANGE_IN_WIDTH
-        maxChangeInHeight = Database.MAX_CHANGE_IN_HEIGHT
-        maxAngleBetweenChar = Database.MAX_ANGLE_BETWEEN_CHARS
-        minNumberOfMatchCharNumber = Database.MIN_NUMBER_OF_MATCHING_CHARS
-        cameraStatus = "Çalışmıyor"
-        topYOne = 0
-        topYTwo = 240
-        bottomYOne = 240
-        bottomYTwo = 480
-        countDot = self.CountofLetter(cameraIP,".")
-        search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
-        results = search.fetchone()
-        if (len(cameraIP) < 16 and len(cameraIP) > 6 and len(cameraName) != 0 and countDot ==3):
-            if (cameraIP[-1] == "."):
-                cameraIP = cameraIP + "0"
-            if (results == None):
-                if (self.addCameraPage.radioButtonRtsp.isChecked() == True):
-                    protocolType = "rtsp"
-                if (self.addCameraPage.radioButtonHttp.isChecked() == True):
-                    protocolType = "http"
-                curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, 
-                ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,
-                MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,
-                TopYOne,TopYTwo,BottomYOne,BottomYTwo,CameraStatus) 
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
-                cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth, minPixelHeight,
-                minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea, maxChangeInWidth,
-                maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne,
-                bottomYTwo, cameraStatus))
-                conn.commit()
-                protocolType = "rtsp"
-                self.addCameraPage.close()
-                QMessageBox.information(self.addCameraPage, 'Kayıt Başarılı',
-                                        "Kamera sisteme eklendi!\n",
+        try:
+            cameraName = self.addCameraPage.editCameraName.text()
+            cameraIP = self.addCameraPage.editCameraIP.text()
+            cameraIPAddition = self.addCameraPage.editCameraIPAddition.text()
+            username = self.addCameraPage.editUsername.text()
+            password = self.addCameraPage.editPassword.text()
+            protocolType = "rtsp"
+            location = self.addCameraPage.editLocation.toPlainText()
+            minPixelWidth = Database.MIN_PIXEL_WIDTH
+            minPixelHeight = Database.MIN_PIXEL_HEIGHT
+            minPixelArea = Database.MIN_PIXEL_AREA
+            minPixelRatio = Database.MIN_ASPECT_RATIO
+            maxPixelRatio = Database.MAX_ASPECT_RATIO
+            minDiagSize = Database.MIN_DIAG_SIZE_MULTIPLE_AWAY
+            maxDiagSize = Database.MAX_DIAG_SIZE_MULTIPLE_AWAY
+            maxChangeInArea = Database.MAX_CHANGE_IN_AREA
+            maxChangeInWidth = Database.MAX_CHANGE_IN_WIDTH
+            maxChangeInHeight = Database.MAX_CHANGE_IN_HEIGHT
+            maxAngleBetweenChar = Database.MAX_ANGLE_BETWEEN_CHARS
+            minNumberOfMatchCharNumber = Database.MIN_NUMBER_OF_MATCHING_CHARS
+            cameraStatus = "Çalışmıyor"
+            topYOne = 0
+            topYTwo = 240
+            bottomYOne = 240
+            bottomYTwo = 480
+            countDot = self.CountofLetter(cameraIP, ".")
+            search = curs.execute('SELECT CameraName FROM Cameras WHERE CameraName = ? ', (cameraName,))
+            results = search.fetchone()
+            if (len(cameraIP) < 16 and len(cameraIP) > 6 and len(cameraName) != 0 and countDot == 3):
+                if (cameraIP[-1] == "."):
+                    cameraIP = cameraIP + "0"
+                if (results == None):
+                    if (self.addCameraPage.radioButtonRtsp.isChecked() == True):
+                        protocolType = "rtsp"
+                    if (self.addCameraPage.radioButtonHttp.isChecked() == True):
+                        protocolType = "http"
+                    if (len(location) != 0):
+                        curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, 
+                                                ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,
+                                                MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,
+                                                TopYOne,TopYTwo,BottomYOne,BottomYTwo,CameraStatus, CameraLocation) 
+                                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                            cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth,
+                            minPixelHeight,
+                            minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea,
+                            maxChangeInWidth,
+                            maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo,
+                            bottomYOne,
+                            bottomYTwo, cameraStatus, location))
+                        conn.commit()
+                        protocolType = "rtsp"
+                        self.addCameraPage.close()
+                        QMessageBox.information(self.addCameraPage, 'Kayıt Başarılı',
+                                                "Kamera sisteme eklendi!\n",
+                                                QMessageBox.Ok, QMessageBox.Ok)
+                    else:
+                        QMessageBox.warning(self.addCameraPage, 'Geçersiz Konum!',
+                                            "Lütfen kamera konumunu giriniz!\n",
+                                            QMessageBox.Ok, QMessageBox.Ok)
+                else:
+                    QMessageBox.warning(self.addCameraPage, 'Geçersiz Kamera İsmi!',
+                                        "Eklenmek istenen kamera adı sistemde mevcut!\n",
                                         QMessageBox.Ok, QMessageBox.Ok)
             else:
-                QMessageBox.warning(self.addCameraPage, 'Geçersiz Kamera İsmi!',
-                                    "Eklenmek istenen kamera adı sistemde mevcut!\n",
+                QMessageBox.warning(self.addCameraPage, 'Geçersiz Bilgi!',
+                                    "Eklenmek istenen bilgileri kontrol ediniz!\n",
                                     QMessageBox.Ok, QMessageBox.Ok)
-        else:
-            QMessageBox.warning(self.addCameraPage, 'Geçersiz Bilgi!',
-                                "Eklenmek istenen bilgileri kontrol ediniz!\n",
-                                QMessageBox.Ok, QMessageBox.Ok)
+        except Exception as error:
+            date = GetDate()
+            filename = path + "Log\\" + date
+            logToday = open(filename, "a+")
+            logToday.write(str(error) + "\n")
+            logToday.close()
 
     def LoadDatabase(self):
         while self.tableWidget.rowCount() > 0:
@@ -688,9 +760,9 @@ class WagonTracking(QMainWindow,Ui_MainWindow):
             self.imgLabel.setScaledContents(True)
         except:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def DisplayPhoto(self, img,type):
@@ -808,6 +880,7 @@ class Cameras(QDialog,Ui_Dialog):
             username = self.addCameraPage.editUsername.text()
             password = self.addCameraPage.editPassword.text()
             protocolType = "rtsp"
+            location = self.addCameraPage.editLocation.toPlainText()
             minPixelWidth = Database.MIN_PIXEL_WIDTH
             minPixelHeight = Database.MIN_PIXEL_HEIGHT
             minPixelArea = Database.MIN_PIXEL_AREA
@@ -836,24 +909,28 @@ class Cameras(QDialog,Ui_Dialog):
                         protocolType = "rtsp"
                     if (self.addCameraPage.radioButtonHttp.isChecked() == True):
                         protocolType = "http"
-                    curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, 
-                                            ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,
-                                            MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,
-                                            TopYOne,TopYTwo,BottomYOne,BottomYTwo,CameraStatus) 
-                                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
-                        cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth,
-                        minPixelHeight,
-                        minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea,
-                        maxChangeInWidth,
-                        maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo,
-                        bottomYOne,
-                        bottomYTwo, cameraStatus))
-                    conn.commit()
-                    self.LoadCameraDatabase()
-                    protocolType = "rtsp"
-                    self.addCameraPage.close()
-                    QMessageBox.information(self.addCameraPage, 'Kayıt Başarılı!',
-                                            "Kamera sisteme eklendi!\n",
+                    if (len(location) != 0):
+                        curs.execute("""INSERT INTO Cameras(CameraName,CameraIP,CameraIPAddition,Username,Password, 
+                                                ProtocolType, MinPixelWidth ,MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,
+                                                MaxDiagSize,MaxChangeInArea,MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,
+                                                TopYOne,TopYTwo,BottomYOne,BottomYTwo,CameraStatus, CameraLocation) 
+                                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                            cameraName, cameraIP, cameraIPAddition, username, password, protocolType, minPixelWidth,
+                            minPixelHeight,
+                            minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize, maxDiagSize, maxChangeInArea,
+                            maxChangeInWidth,
+                            maxChangeInHeight, maxAngleBetweenChar, minNumberOfMatchCharNumber, topYOne, topYTwo,
+                            bottomYOne,
+                            bottomYTwo, cameraStatus, location))
+                        conn.commit()
+                        protocolType = "rtsp"
+                        self.addCameraPage.close()
+                        QMessageBox.information(self.addCameraPage, 'Kayıt Başarılı',
+                                                "Kamera sisteme eklendi!\n",
+                                                QMessageBox.Ok, QMessageBox.Ok)
+                    else:
+                        QMessageBox.warning(self.addCameraPage, 'Geçersiz Konum!',
+                                            "Lütfen kamera konumunu giriniz!\n",
                                             QMessageBox.Ok, QMessageBox.Ok)
                 else:
                     QMessageBox.warning(self.addCameraPage, 'Geçersiz Kamera İsmi!',
@@ -865,9 +942,9 @@ class Cameras(QDialog,Ui_Dialog):
                                     QMessageBox.Ok, QMessageBox.Ok)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def ContourSize(self,topYOne,topYTwo,bottomYOne,bottomYTwo):
@@ -925,9 +1002,9 @@ class Cameras(QDialog,Ui_Dialog):
                                     QMessageBox.Ok, QMessageBox.Ok)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def GetFrameFromCamera(self, cameraIP, ip, topYOne, topYTwo, bottomYOne, bottomYTwo):
@@ -956,9 +1033,9 @@ class Cameras(QDialog,Ui_Dialog):
                                     QMessageBox.Ok, QMessageBox.Ok)
         except:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def ShowContours(self,img,topyone,topytwo,bottomyone,bottomytwo):
@@ -1000,11 +1077,13 @@ class Cameras(QDialog,Ui_Dialog):
                     bottomYOne = data[21]
                     bottomYTwo = data[22]
                     cameraStatus = data[23]
+                    location = data[24]
                     self.updateCameraPage.editCameraName.setText(str(cameraName))
                     self.updateCameraPage.editCameraIP.setText(str(cameraIP))
                     self.updateCameraPage.editCameraIPAddition.setText(str(cameraIPAddition))
                     self.updateCameraPage.editUsername.setText(str(username))
                     self.updateCameraPage.editPassword.setText(str(password))
+                    self.updateCameraPage.editLocation.setText(str(location))
                     self.updateCameraPage.editMinPixelWidth.setText(str(minPixelWidth))
                     self.updateCameraPage.editMinPixelHeight.setText(str(minPixelHeight))
                     self.updateCameraPage.editMinPixelArea.setText(str(minPixelArea))
@@ -1038,9 +1117,9 @@ class Cameras(QDialog,Ui_Dialog):
                         self.updateCameraPage.buttonShowContours.setEnabled(False)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def UpdateCamera(self):
@@ -1051,6 +1130,7 @@ class Cameras(QDialog,Ui_Dialog):
             cameraIPAddition = self.updateCameraPage.editCameraIPAddition.text()
             username = self.updateCameraPage.editUsername.text()
             password = self.updateCameraPage.editPassword.text()
+            location = self.updateCameraPage.editLocation.text()
             minPixelWidth = self.updateCameraPage.editMinPixelWidth.text()
             minPixelHeight = self.updateCameraPage.editMinPixelHeight.text()
             minPixelArea = self.updateCameraPage.editMinPixelArea.text()
@@ -1091,7 +1171,7 @@ class Cameras(QDialog,Ui_Dialog):
                         and len(minPixelRatio) != 0 and len(minDiagSize) != 0 and len(maxDiagSize) != 0
                         and len(maxChangeInArea) != 0 and len(maxChangeInWidth) != 0 and len(maxChangeInHeight) != 0
                         and len(maxAngleBetweenChar) != 0 and len(minNumberOfMatchCharNumber) != 0 and countDot == 3
-                        and len(cameraName) != 0):
+                        and len(cameraName) != 0 and len(location)!= 0):
                     minPixelRatio = str(float(minPixelRatio))
                     maxPixelRatio = str(float(maxPixelRatio))
                     minDiagSize = str(float(minDiagSize))
@@ -1107,15 +1187,14 @@ class Cameras(QDialog,Ui_Dialog):
                                                     ProtocolType = ? , MinPixelWidth = ? , MinPixelHeight = ? , MinPixelArea = ? , MinPixelRatio = ? , 
                                                     MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , MaxChangeInArea = ? , MaxChangeInWidth = ? , 
                                                     MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , MinNumberOfMatchCharNumber = ? , TopYOne = ? , 
-                                                    TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? , CameraStatus = ? WHERE CameraName = ?""",
+                                                    TopYTwo = ? , BottomYOne = ? , BottomYTwo = ? , CameraStatus = ?, CameraLocation = ? WHERE CameraName = ?""",
                                      (cameraName, cameraIP, cameraIPAddition, username, password, protocolType,
                                       minPixelWidth,
                                       minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize,
                                       maxDiagSize,
                                       maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
                                       minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo,
-                                      cameraStatus,
-                                      self.oldCameraName))
+                                      cameraStatus, location, self.oldCameraName))
                         conn.commit()
                         self.LoadCameraDatabase()
                         QMessageBox.information(self.updateCameraPage, 'Güncelleme Başarılı',
@@ -1130,15 +1209,14 @@ class Cameras(QDialog,Ui_Dialog):
                                                     MinPixelArea = ? , MinPixelRatio = ? , MaxPixelRatio = ? , MinDiagSize = ? , MaxDiagSize = ? , 
                                                     MaxChangeInArea = ? , MaxChangeInWidth = ? , MaxChangeInHeight = ? , MaxAngleBetweenChar = ? , 
                                                     MinNumberOfMatchCharNumber = ? , TopYOne = ? , TopYTwo = ? , BottomYOne = ? , BottomYTwo = ?, 
-                                                    CameraStatus = ? WHERE CameraName = ?""",
+                                                    CameraStatus = ? , CameraLocation = ? WHERE CameraName = ?""",
                                          (cameraName, cameraIP, cameraIPAddition, username, password, protocolType,
                                           minPixelWidth,
                                           minPixelHeight, minPixelArea, minPixelRatio, maxPixelRatio, minDiagSize,
                                           maxDiagSize,
                                           maxChangeInArea, maxChangeInWidth, maxChangeInHeight, maxAngleBetweenChar,
                                           minNumberOfMatchCharNumber, topYOne, topYTwo, bottomYOne, bottomYTwo,
-                                          cameraStatus,
-                                          self.oldCameraName))
+                                          cameraStatus, location, self.oldCameraName))
                             conn.commit()
                             self.LoadCameraDatabase()
                             QMessageBox.information(self.updateCameraPage, 'Güncelleme Başarılı',
@@ -1159,9 +1237,9 @@ class Cameras(QDialog,Ui_Dialog):
                                     QMessageBox.Ok, QMessageBox.Ok)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
 
@@ -1180,9 +1258,9 @@ class Cameras(QDialog,Ui_Dialog):
             self.updateCameraPage.labelCalibrationPhoto.setScaledContents(True)
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(f) + "\n")
             logToday.close()
 
     def DeleteCamera(self):
@@ -1207,9 +1285,9 @@ class Cameras(QDialog,Ui_Dialog):
                     self.show()
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def LoadCameraDatabase(self):
@@ -1217,7 +1295,7 @@ class Cameras(QDialog,Ui_Dialog):
             self.tableWidget.removeRow(0)
         content = """SELECT CameraName,CameraIP,CameraIPAddition,Username,Password, ProtocolType, MinPixelWidth ,
         MinPixelHeight,MinPixelArea,MinPixelRatio,MaxPixelRatio,MinDiagSize,MaxDiagSize,MaxChangeInArea,
-        MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,CameraStatus FROM Cameras"""
+        MaxChangeInWidth,MaxChangeInHeight,MaxAngleBetweenChar,MinNumberOfMatchCharNumber,CameraStatus,CameraLocation FROM Cameras"""
         res = conn.execute(content)
         for row_index, row_data in enumerate(res):
             self.tableWidget.insertRow(row_index)
@@ -1265,9 +1343,9 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
             return fontName
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def DeleteFont(self):
@@ -1297,9 +1375,9 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
             self.show()
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def UseFont(self):
@@ -1320,9 +1398,9 @@ class Fonts(QDialog,Fonts.Ui_Dialog):
             self.show()
         except Exception as error:
             date = GetDate()
-            filename = path + "Log\\" + date + "\n"
+            filename = path + "Log\\" + date
             logToday = open(filename, "a+")
-            logToday.write(str(error))
+            logToday.write(str(error) + "\n")
             logToday.close()
 
     def TableClicked(self):

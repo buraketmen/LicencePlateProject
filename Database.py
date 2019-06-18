@@ -44,7 +44,8 @@ def setDatabase():
                 TopYTwo TEXT,
                 BottomYOne TEXT,
                 BottomYTwo TEXT,
-                CameraStatus TEXT)
+                CameraStatus TEXT,
+                CameraLocation TEXT)
                 """)
     curs.execute("""
                 CREATE TABLE IF NOT EXISTS Fonts(
@@ -60,7 +61,8 @@ def setDatabase():
                 Plate TEXT,
                 Date TEXT,
                 Time TEXT,
-                Camera TEXT)
+                Camera TEXT,
+                Sent TEXT)
                 """)
     curs.execute("""
                 CREATE TABLE IF NOT EXISTS Log(

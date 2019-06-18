@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1117</width>
-    <height>816</height>
+    <width>1119</width>
+    <height>834</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>1117</width>
-    <height>816</height>
+    <width>1119</width>
+    <height>834</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>1117</width>
-    <height>816</height>
+    <width>1119</width>
+    <height>834</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -28,15 +28,15 @@
   <widget class="QPushButton" name="buttonSaveConfiguration">
    <property name="geometry">
     <rect>
-     <x>760</x>
-     <y>750</y>
+     <x>430</x>
+     <y>770</y>
      <width>300</width>
      <height>51</height>
     </rect>
    </property>
    <property name="minimumSize">
     <size>
-     <width>261</width>
+     <width>300</width>
      <height>51</height>
     </size>
    </property>
@@ -62,9 +62,9 @@
    <property name="geometry">
     <rect>
      <x>670</x>
-     <y>10</y>
+     <y>40</y>
      <width>31</width>
-     <height>761</height>
+     <height>721</height>
     </rect>
    </property>
    <property name="font">
@@ -84,7 +84,7 @@
      <x>720</x>
      <y>40</y>
      <width>111</width>
-     <height>211</height>
+     <height>241</height>
     </rect>
    </property>
    <property name="font">
@@ -185,6 +185,21 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QLabel" name="labelLocation">
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Konum</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QLabel" name="labelCalibrationPhoto">
@@ -236,22 +251,22 @@
   <widget class="QPushButton" name="buttonShowContours">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>710</y>
-     <width>261</width>
-     <height>51</height>
+     <x>190</x>
+     <y>660</y>
+     <width>281</width>
+     <height>61</height>
     </rect>
    </property>
    <property name="minimumSize">
     <size>
-     <width>261</width>
-     <height>51</height>
+     <width>281</width>
+     <height>61</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>261</width>
-     <height>51</height>
+     <width>281</width>
+     <height>61</height>
     </size>
    </property>
    <property name="font">
@@ -272,8 +287,8 @@
   <widget class="QLabel" name="labelCharReadingCalibration">
    <property name="geometry">
     <rect>
-     <x>770</x>
-     <y>260</y>
+     <x>780</x>
+     <y>290</y>
      <width>311</width>
      <height>31</height>
     </rect>
@@ -308,8 +323,8 @@
   <widget class="QWidget" name="layoutWidget_3">
    <property name="geometry">
     <rect>
-     <x>980</x>
-     <y>300</y>
+     <x>960</x>
+     <y>330</y>
      <width>100</width>
      <height>411</height>
     </rect>
@@ -732,9 +747,9 @@
   <widget class="QWidget" name="layoutWidget_4">
    <property name="geometry">
     <rect>
-     <x>740</x>
-     <y>300</y>
-     <width>231</width>
+     <x>750</x>
+     <y>330</y>
+     <width>201</width>
      <height>401</height>
     </rect>
    </property>
@@ -922,225 +937,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Okunacak Minimum Karakter Sayisi</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>530</y>
-     <width>102</width>
-     <height>171</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Calibri</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QLineEdit" name="editTopY1">
-      <property name="minimumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>12</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="editTopY2">
-      <property name="minimumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>12</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="editBottomY1">
-      <property name="minimumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>12</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="editBottomY2">
-      <property name="minimumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>100</width>
-        <height>36</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>12</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>150</x>
-     <y>530</y>
-     <width>171</width>
-     <height>171</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Calibri</family>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_3">
-    <item>
-     <widget class="QLabel" name="labelTopY1">
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>11</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>ÜST BÖLME İÇİN ÜST SINIR</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="labelTopY2">
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>11</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>ÜST BÖLME İÇİN ALT SINIR</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="labelBottomY1">
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>11</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>ALT BÖLME İÇİN ÜST SINIR</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="labelBottomY2">
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>11</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>ALT BÖLME İÇİN ALT SINIR</string>
+       <string>Okunacak Min. Karakter Sayısı</string>
       </property>
      </widget>
     </item>
@@ -1152,7 +949,7 @@
      <x>840</x>
      <y>40</y>
      <width>263</width>
-     <height>211</height>
+     <height>241</height>
     </rect>
    </property>
    <property name="font">
@@ -1386,75 +1183,36 @@
       </item>
      </layout>
     </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>-180</x>
-     <y>10</y>
-     <width>1641</width>
-     <height>33</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QLabel" name="labelCameraOptions">
+     <widget class="QLineEdit" name="editLocation">
       <property name="minimumSize">
        <size>
-        <width>141</width>
-        <height>31</height>
+        <width>261</width>
+        <height>30</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>141</width>
-        <height>31</height>
+        <width>261</width>
+        <height>30</height>
        </size>
       </property>
       <property name="font">
        <font>
         <family>Calibri</family>
-        <pointsize>13</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-        <underline>false</underline>
-        <strikeout>false</strikeout>
-        <kerning>true</kerning>
+        <pointsize>12</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
-      <property name="text">
-       <string>KAMERA AYARI</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="labelCameraInfo">
-      <property name="minimumSize">
-       <size>
-        <width>141</width>
-        <height>31</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>171</width>
-        <height>31</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>Calibri</family>
-        <pointsize>13</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-        <underline>false</underline>
-        <strikeout>false</strikeout>
-        <kerning>true</kerning>
-       </font>
+      <property name="toolTipDuration">
+       <number>9999</number>
       </property>
       <property name="text">
-       <string>KAMERA BİLGİLERİ</string>
+       <string/>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -1463,8 +1221,8 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>740</x>
-     <y>710</y>
+     <x>750</x>
+     <y>740</y>
      <width>351</width>
      <height>26</height>
     </rect>
@@ -1548,6 +1306,282 @@
        </widget>
       </item>
      </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>560</y>
+     <width>272</width>
+     <height>82</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_8">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_11">
+      <item>
+       <widget class="QLabel" name="labelBottomY1">
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>ALT BÖLME İÇİN ÜST SINIR</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelBottomY2">
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>ALT BÖLME İÇİN ALT SINIR</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_12">
+      <item>
+       <widget class="QLineEdit" name="editBottomY1">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="editBottomY2">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>560</y>
+     <width>275</width>
+     <height>82</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_9">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QLabel" name="labelTopY1">
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>ÜST BÖLME İÇİN ÜST SINIR</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelTopY2">
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>ÜST BÖLME İÇİN ALT SINIR</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLineEdit" name="editTopY1">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="editTopY2">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>36</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>0</y>
+     <width>1101</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelCameraInfo">
+      <property name="minimumSize">
+       <size>
+        <width>150</width>
+        <height>31</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>150</width>
+        <height>31</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>13</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+        <underline>false</underline>
+        <strikeout>false</strikeout>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="text">
+       <string>KAMERAYI GÜNCELLE</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="Line" name="line_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
